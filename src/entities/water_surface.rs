@@ -161,72 +161,6 @@ impl Entity for WaterSurface {
     }
 }
 
-/// Water surface manager handles all 4 water layers
-pub struct WaterSurfaceManager {
-    water_layers: Vec<WaterSurface>,
-    last_screen_width: u16,
-}
-
-impl WaterSurfaceManager {
-    pub fn new() -> Self {
-        Self {
-            water_layers: Vec::new(),
-            last_screen_width: 0,
-        }
-    }
-
-    /// Initialize water surface layers for given screen width
-    pub fn initialize(&mut self, screen_bounds: Rect, start_id: EntityId) -> Vec<WaterSurface> {
-        self.last_screen_width = screen_bounds.width;
-        let mut layers = Vec::new();
-
-        // Create 4 water surface layers
-        for layer_index in 0..4 {
-            let layer = WaterSurface::new(
-                start_id + layer_index as u64,
-                layer_index,
-                screen_bounds.width,
-            );
-            layers.push(layer);
-        }
-
-        self.water_layers = layers.clone();
-        layers
-    }
-
-    /// Update water surface if screen size changed
-    pub fn update_for_screen_size(&mut self, screen_bounds: Rect) -> bool {
-        if screen_bounds.width != self.last_screen_width {
-            self.last_screen_width = screen_bounds.width;
-
-            // Resize all water layers
-            for layer in &mut self.water_layers {
-                layer.resize(screen_bounds.width);
-            }
-
-            true // Indicates layers were updated
-        } else {
-            false
-        }
-    }
-
-    /// Get all water surface layers
-    pub fn get_layers(&self) -> &Vec<WaterSurface> {
-        &self.water_layers
-    }
-
-    /// Get mutable reference to layers
-    pub fn get_layers_mut(&mut self) -> &mut Vec<WaterSurface> {
-        &mut self.water_layers
-    }
-}
-
-impl Default for WaterSurfaceManager {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -258,24 +192,6 @@ mod tests {
         assert_ne!(water0.depth(), water1.depth());
         assert_ne!(water1.depth(), water2.depth());
         assert_ne!(water2.depth(), water3.depth());
-    }
-
-    #[test]
-    fn test_water_surface_manager() {
-        let mut manager = WaterSurfaceManager::new();
-        let screen_bounds = Rect::new(0, 0, 80, 24);
-
-        let layers = manager.initialize(screen_bounds, 100);
-
-        assert_eq!(layers.len(), 4);
-        assert_eq!(manager.get_layers().len(), 4);
-
-        // Test resize detection
-        let new_bounds = Rect::new(0, 0, 120, 30);
-        assert!(manager.update_for_screen_size(new_bounds));
-
-        // Second call with same size should not trigger update
-        assert!(!manager.update_for_screen_size(new_bounds));
     }
 
     #[test]

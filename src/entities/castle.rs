@@ -155,60 +155,6 @@ impl Entity for Castle {
     }
 }
 
-/// Castle manager handles castle lifecycle and positioning
-pub struct CastleManager {
-    castle_exists: bool,
-    last_screen_size: (u16, u16),
-}
-
-impl CastleManager {
-    pub fn new() -> Self {
-        Self {
-            castle_exists: false,
-            last_screen_size: (0, 0),
-        }
-    }
-
-    /// Check if castle should be created
-    pub fn should_create_castle(&mut self, screen_bounds: Rect) -> bool {
-        !self.castle_exists && screen_bounds.width >= 32 && screen_bounds.height >= 13
-    }
-
-    /// Mark castle as created
-    pub fn mark_castle_created(&mut self, screen_bounds: Rect) {
-        self.castle_exists = true;
-        self.last_screen_size = (screen_bounds.width, screen_bounds.height);
-    }
-
-    /// Check if castle should be repositioned due to screen resize
-    pub fn should_reposition_castle(&mut self, screen_bounds: Rect) -> bool {
-        let current_size = (screen_bounds.width, screen_bounds.height);
-        if current_size != self.last_screen_size {
-            self.last_screen_size = current_size;
-            true
-        } else {
-            false
-        }
-    }
-
-    /// Reset castle manager (for redraw)
-    pub fn reset(&mut self) {
-        self.castle_exists = false;
-        self.last_screen_size = (0, 0);
-    }
-
-    /// Check if castle exists
-    pub fn castle_exists(&self) -> bool {
-        self.castle_exists
-    }
-}
-
-impl Default for CastleManager {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -259,32 +205,5 @@ mod tests {
         castle.reposition_for_screen(Rect::new(0, 0, 100, 30));
         assert_eq!(castle.position().x, 68.0); // 100 - 32 = 68
         assert_eq!(castle.position().y, 17.0); // 30 - 13 = 17
-    }
-
-    #[test]
-    fn test_castle_manager() {
-        let mut manager = CastleManager::new();
-        let screen_bounds = Rect::new(0, 0, 80, 24);
-
-        // Should want to create castle initially
-        assert!(manager.should_create_castle(screen_bounds));
-        assert!(!manager.castle_exists());
-
-        // Mark as created
-        manager.mark_castle_created(screen_bounds);
-        assert!(manager.castle_exists());
-        assert!(!manager.should_create_castle(screen_bounds));
-
-        // Should want to reposition on screen resize
-        assert!(manager.should_reposition_castle(Rect::new(0, 0, 100, 30)));
-    }
-
-    #[test]
-    fn test_castle_manager_small_screen() {
-        let mut manager = CastleManager::new();
-        let small_screen = Rect::new(0, 0, 20, 10);
-
-        // Should not create castle on screen too small
-        assert!(!manager.should_create_castle(small_screen));
     }
 }

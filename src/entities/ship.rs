@@ -1,4 +1,4 @@
-use crate::entity::{Direction, Entity, EntityId, Position, Sprite, Velocity};
+use crate::entity::{DeathCallback, Direction, Entity, EntityId, Position, Sprite, Velocity};
 use rand::Rng;
 use ratatui::layout::Rect;
 use std::time::{Duration, Instant};
@@ -165,40 +165,9 @@ impl Entity for Ship {
     fn entity_type(&self) -> &'static str {
         "ship"
     }
-}
 
-/// Manager for ship spawning and lifecycle
-pub struct ShipManager {
-    last_spawn_time: Instant,
-    spawn_interval: Duration,
-}
-
-impl ShipManager {
-    pub fn new() -> Self {
-        Self {
-            last_spawn_time: Instant::now(),
-            spawn_interval: Duration::from_secs(45), // Spawn roughly every 45 seconds
-        }
-    }
-
-    pub fn should_spawn(&mut self) -> bool {
-        if self.last_spawn_time.elapsed() >= self.spawn_interval {
-            self.last_spawn_time = Instant::now();
-            // Random chance to spawn
-            rand::thread_rng().gen_bool(0.25) // 25% chance when interval elapses
-        } else {
-            false
-        }
-    }
-
-    pub fn create_ship(&self, id: EntityId, screen_bounds: Rect) -> Ship {
-        Ship::new(id, screen_bounds)
-    }
-}
-
-impl Default for ShipManager {
-    fn default() -> Self {
-        Self::new()
+    fn death_callback(&self) -> Option<DeathCallback> {
+        Some(crate::spawning::random_object)
     }
 }
 
@@ -301,38 +270,6 @@ mod tests {
 
         ship.update(Duration::from_millis(16), screen_bounds);
         assert!(!ship.is_alive());
-    }
-
-    #[test]
-    fn test_ship_manager() {
-        let mut manager = ShipManager::new();
-
-        // Should not spawn immediately after creation
-        assert!(!manager.should_spawn());
-
-        // Simulate time passing
-        manager.last_spawn_time = Instant::now() - Duration::from_secs(46);
-
-        // Should have a chance to spawn now (may not always spawn due to randomness)
-        let mut _spawned = false;
-        for _ in 0..20 {
-            if manager.should_spawn() {
-                _spawned = true;
-                break;
-            }
-            manager.last_spawn_time = Instant::now() - Duration::from_secs(46);
-        }
-        // At least one attempt should succeed with 25% chance over 20 tries
-    }
-
-    #[test]
-    fn test_ship_manager_create() {
-        let manager = ShipManager::new();
-        let screen_bounds = Rect::new(0, 0, 80, 24);
-        let ship = manager.create_ship(1, screen_bounds);
-
-        assert_eq!(ship.id(), 1);
-        assert_eq!(ship.entity_type(), "ship");
     }
 
     #[test]

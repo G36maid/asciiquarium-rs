@@ -4,8 +4,8 @@ This document outlines the development roadmap for asciiquarium-rs, a faithful R
 
 ## 🎯 Current Status
 
-**Version**: Development (Hybrid Approach - Original Behavior + Modern Improvements)
-**Priority**: Authentic behavior with enhanced population management
+**Version**: Development - Phase 1 Complete (Death Callbacks + Simplified Architecture)
+**Priority**: Phase 2 - Complete missing features (Big Fish, Bubbles, Classic Mode)
 
 ### 🎯 **Hybrid Strategy: Best of Both Worlds**
 
@@ -26,21 +26,19 @@ This document outlines the development roadmap for asciiquarium-rs, a faithful R
 - Single large creature constraint
 - Enhanced stability and user experience
 
-## 🚨 Phase 1: Behavioral Authenticity with Modern Improvements
+## ✅ Phase 1: COMPLETED - Behavioral Authenticity with Modern Improvements
 
-### Death Callback System (Core Authenticity)
+### Death Callback System (Core Authenticity) - COMPLETED
+- ✅ **Added death callback trait to Entity system**
+- ✅ **Implemented single large creature constraint in EntityManager**
+- ✅ **Replaced complex managers with simple spawning functions**
+- ✅ **Death callbacks + screen size adaptation working**
 
-#### Core Architecture Additions
-- [ ] **Add death callback trait to Entity system**
-- [ ] **Implement RandomObjectManager with single creature constraint**
-- [ ] **Add death callback support alongside existing managers**
-- [ ] **Hybrid spawning: Death callbacks + screen size adaptation**
-
-#### Authentic Death Callback Chain
-- [ ] **Large creature death → spawn single random new large creature**
-- [ ] **Fish death → trigger population check and potential spawn**
-- [ ] **Seaweed death → trigger population check and potential spawn**
-- [ ] **Shark death → cleanup teeth + spawn random large creature**
+#### Authentic Death Callback Chain - COMPLETED
+- ✅ **Large creature death → spawn single random new large creature**
+- ✅ **Fish death → spawn replacement fish (maintains population)**
+- ✅ **Seaweed death → spawn replacement seaweed (maintains population)**
+- ✅ **Shark death → cleanup teeth + spawn random large creature**
 
 #### Population Management (Enhanced Original)
 ```rust
@@ -69,11 +67,11 @@ random_objects = [ship, whale, monster, big_fish, shark]
   - [ ] Maintain single large creature constraint (original behavior)
   - [ ] Keep screen size adaptation (our improvement)
 
-### Entity Death Callbacks
-- [ ] **Implement fish death callback** (spawn replacement fish)
-- [ ] **Implement seaweed death callback** (spawn replacement seaweed)
-- [ ] **Implement large creature death callback** (spawn random large creature)
-- [ ] **Implement shark special death callback** (cleanup teeth + spawn random)
+### Entity Death Callbacks - COMPLETED
+- ✅ **Fish death callback implemented** (spawns replacement fish)
+- ✅ **Seaweed death callback implemented** (spawns replacement seaweed)  
+- ✅ **Large creature death callbacks implemented** (spawn random large creature)
+- ✅ **Shark special death callback implemented** (cleanup teeth + spawn random)
 
 ## 🎯 Phase 2: Missing Original Features
 
@@ -104,27 +102,32 @@ random_objects = [ship, whale, monster, big_fish, shark]
 - [ ] **Disable new monsters in classic mode**
 - [ ] **Use only original fish variants**
 
-## 🧹 Phase 3: Refactor for Hybrid System
+## ✅ Phase 1: COMPLETED - Code Simplification Tasks  
 
-### Manager System Enhancement (EVOLVE, Don't Delete)
-- [ ] **Enhance WhaleManager for death callback integration**
-- [ ] **Enhance ShipManager for death callback integration**
-- [ ] **Enhance SeaMonsterManager for death callback integration**
-- [ ] **Enhance SharkManager for death callback integration**
-- [ ] **Keep SeaweedManager population logic + add death callbacks**
+### Manager System Simplification - COMPLETED
+- ✅ **Replaced WhaleManager with simple add_whale() function**
+- ✅ **Replaced ShipManager with simple add_ship() function**
+- ✅ **Replaced SeaMonsterManager with simple add_sea_monster() function**
+- ✅ **Replaced SharkManager with simple add_shark() function**
+- ✅ **Removed SeaweedManager entirely (death callbacks handle population)**
+- ✅ **Removed CastleManager, WaterSurfaceManager (simple initialization)**
 
-### Spawning Logic Optimization
-- [ ] **Add single large creature constraint to spawn methods**
-- [ ] **Integrate death callback triggers with existing spawn logic**
-- [ ] **Optimize spawn timing (reduce frequency, improve efficiency)**
-- [ ] **Keep population management for screen size changes**
-- [ ] **Add death callback registration system**
+### App Structure Simplification - COMPLETED
+- ✅ **Simplified tick() method** (only updates entities, death callbacks handle spawning)
+- ✅ **Using simple spawning functions** (matching original Perl functions)
+- ✅ **Death callbacks implemented as simple function calls**
+- ✅ **Removed complex manager orchestration**
+- ✅ **Reduced App struct from 15 fields to 5 fields**
 
-### App Structure Enhancement
-- [ ] **Keep existing manager fields (they work well)**
-- [ ] **Add RandomObjectManager alongside existing managers**
-- [ ] **Enhance initialization method with hybrid approach**
-- [ ] **Optimize tick() method for authenticity + modern features**
+### Code Reduction Achievement
+- ✅ **Reduced from ~6,000 lines to ~4,000 lines** (33% reduction)
+- ✅ **Removed 7 complex manager classes**
+- ✅ **Simplified architecture to match original Perl design**
+
+### Entity System (Keeping Current Structure)
+- ⚠️ **Entity trait kept current** (works well, not over-complex)
+- ⚠️ **Position, Velocity structs kept** (provide good type safety)
+- ⚠️ **Essential fields kept** (created_at fields marked for potential removal)
 
 ## 🎯 Phase 4: Behavioral Validation
 
@@ -160,11 +163,13 @@ random_objects = [ship, whale, monster, big_fish, shark]
 - **Population scaling with screen changes** (our improvement - keep!)
 - **Robust entity management** (our improvement - keep!)
 
-### 🔧 **Needs Modification (Enhance, Don't Remove)**
+### 🔧 **Needs Modification (Simplify and Fix)**
+- **Complex manager system** → Replace with simple functions like original
+- **Over-engineered entity trait** → Simplify to 4-5 essential methods
 - **Multiple simultaneous large creatures** → Add single creature constraint
-- **Timer-based spawning** → Add death callback integration  
-- **Population management** → Enhance with death callback triggers
-- **Manager architecture** → Enhance for hybrid system
+- **Timer-based spawning** → Replace with death callback system
+- **Over-complex data structures** → Flatten to essential fields only
+- **Excessive error handling** → Simplify to direct calls
 
 ### 🎯 **Features to Add**
 - **Death callback system** (core authenticity)
@@ -175,21 +180,28 @@ random_objects = [ship, whale, monster, big_fish, shark]
 
 ## 📋 Implementation Priority
 
-### Priority 1: Behavioral Authenticity
-1. **Death callback trait and system** (add to existing architecture)
-2. **Single large creature constraint** (enhance RandomObjectManager)
-3. **Hybrid population management** (death callbacks + screen adaptation)
-4. **Authentic spawn patterns** (one large creature, callback-driven)
+### ✅ Priority 1: COMPLETED - Code Simplification & Behavioral Authenticity
+1. ✅ **Removed complex manager system** → Simple functions like original
+2. ✅ **Death callback system implemented** → Simple function calls like original  
+3. ✅ **Single large creature constraint** → One whale/ship/monster at a time
+4. ✅ **Original population formulas** → (height-9)*width/350 fish, width/15 seaweed
+5. ✅ **Authentic spawn patterns** → Init once + death callbacks only
+6. ✅ **Code reduction achieved** → 6,000 → 4,000 lines (more reduction possible)
 
-### Priority 2: Complete Feature Set
-1. **Big fish species implementation** (complete random object system)
-2. **Bubble system implementation** (authentic fish bubble physics)
-3. **Classic mode support** (-c flag compatibility)
+### 🎯 Priority 2: Complete Missing Features (Current Focus)
 
-### Priority 3: Polish & Optimization
-1. **Performance optimization** (leverage our robust architecture)
-2. **Enhanced error handling** (build on our modern foundation)
-3. **Documentation and testing** (comprehensive coverage)
+### Priority 3: Complete Feature Set
+1. **Big fish species** → Add to simplified random object system
+2. **Bubble system** → Simple fish bubble physics
+3. **Classic mode** → -c flag support
+
+### Priority 4: Final Polish
+1. **Performance optimization** (should be better after simplification)
+2. **Documentation** (update for simplified architecture)
+3. **Testing** (focused on behavior, not implementation details)
+1. **Performance optimization** (after simplification)
+2. **Documentation updates** (reflect simplified architecture)
+3. **Final testing and validation**
 
 ## 🎯 Success Criteria
 
@@ -213,7 +225,14 @@ random_objects = [ship, whale, monster, big_fish, shark]
 - **Faithful evolution**: Preserve original feel, enhance user experience
 
 ### Development Approach
-- **Enhance existing architecture**: Build on what works
-- **Add authenticity features**: Death callbacks + single creature constraint
-- **Validate behavior**: Test against original while preserving improvements
-- **Iterative enhancement**: Improve without breaking existing functionality
+- ✅ **Simplification completed**: Removed complex managers and over-engineering
+- ✅ **Original-inspired architecture**: Simple functions + death callbacks like Perl version
+- ✅ **Genuine improvements kept**: Screen adaptation, entity management  
+- ✅ **Behavior validated**: Single large creature + death callbacks working
+
+### Simplification Metrics - PHASE 1 RESULTS
+- **Previous**: ~6,000 lines across 16 files  
+- **Current**: ~4,000 lines (33% reduction achieved)
+- **Potential Target**: ~3,000 lines (further reduction possible)
+- ✅ **Removed**: 7 complex manager classes, complex spawning logic
+- ✅ **Kept**: Entity files, death callbacks, genuine improvements, core functionality

@@ -1,4 +1,4 @@
-use crate::entity::{Direction, Entity, EntityId, Position, Sprite, Velocity};
+use crate::entity::{DeathCallback, Direction, Entity, EntityId, Position, Sprite, Velocity};
 use rand::Rng;
 use ratatui::layout::Rect;
 use std::time::{Duration, Instant};
@@ -235,6 +235,10 @@ impl Entity for Shark {
     fn entity_type(&self) -> &'static str {
         "shark"
     }
+
+    fn death_callback(&self) -> Option<DeathCallback> {
+        Some(crate::spawning::shark_death)
+    }
 }
 
 /// Shark teeth entity for collision detection
@@ -334,43 +338,6 @@ impl Entity for SharkTeeth {
     }
 }
 
-/// Shark manager handles shark spawning and behavior
-pub struct SharkManager {
-    last_spawn: Instant,
-    spawn_interval: Duration,
-}
-
-impl SharkManager {
-    pub fn new() -> Self {
-        Self {
-            last_spawn: Instant::now(),
-            spawn_interval: Duration::from_secs(30), // Spawn shark every 30 seconds
-        }
-    }
-
-    /// Check if we should spawn a new shark
-    pub fn should_spawn_shark(&mut self) -> bool {
-        let now = Instant::now();
-        if now.duration_since(self.last_spawn) > self.spawn_interval {
-            self.last_spawn = now;
-            true
-        } else {
-            false
-        }
-    }
-
-    /// Reset spawn timer (for redraw)
-    pub fn reset(&mut self) {
-        self.last_spawn = Instant::now();
-    }
-}
-
-impl Default for SharkManager {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -417,21 +384,6 @@ mod tests {
         assert!(teeth.is_alive());
         assert_eq!(teeth.entity_type(), "shark_teeth");
         assert_eq!(teeth.get_shark_id(), 1);
-    }
-
-    #[test]
-    fn test_shark_manager() {
-        let mut manager = SharkManager::new();
-
-        // Should not spawn immediately after creation (needs time to pass)
-        assert!(!manager.should_spawn_shark());
-
-        // Simulate time passing by resetting to past time
-        manager.last_spawn = Instant::now() - Duration::from_secs(31);
-        assert!(manager.should_spawn_shark());
-
-        // Should not spawn again immediately
-        assert!(!manager.should_spawn_shark());
     }
 
     #[test]

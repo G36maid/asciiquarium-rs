@@ -1,4 +1,4 @@
-use crate::entity::{Direction, Entity, EntityId, Position, Sprite, Velocity};
+use crate::entity::{DeathCallback, Direction, Entity, EntityId, Position, Sprite, Velocity};
 use rand::Rng;
 use ratatui::layout::Rect;
 use std::time::{Duration, Instant};
@@ -168,40 +168,9 @@ impl Entity for SeaMonster {
     fn entity_type(&self) -> &'static str {
         "sea_monster"
     }
-}
 
-/// Manager for sea monster spawning and lifecycle
-pub struct SeaMonsterManager {
-    last_spawn_time: Instant,
-    spawn_interval: Duration,
-}
-
-impl SeaMonsterManager {
-    pub fn new() -> Self {
-        Self {
-            last_spawn_time: Instant::now(),
-            spawn_interval: Duration::from_secs(60), // Spawn roughly every 60 seconds
-        }
-    }
-
-    pub fn should_spawn(&mut self) -> bool {
-        if self.last_spawn_time.elapsed() >= self.spawn_interval {
-            self.last_spawn_time = Instant::now();
-            // Random chance to spawn (monsters are rare)
-            rand::thread_rng().gen_bool(0.2) // 20% chance when interval elapses
-        } else {
-            false
-        }
-    }
-
-    pub fn create_sea_monster(&self, id: EntityId, screen_bounds: Rect) -> SeaMonster {
-        SeaMonster::new(id, screen_bounds)
-    }
-}
-
-impl Default for SeaMonsterManager {
-    fn default() -> Self {
-        Self::new()
+    fn death_callback(&self) -> Option<DeathCallback> {
+        Some(crate::spawning::random_object)
     }
 }
 
@@ -345,38 +314,6 @@ mod tests {
     }
 
     #[test]
-    fn test_sea_monster_manager() {
-        let mut manager = SeaMonsterManager::new();
-
-        // Should not spawn immediately after creation
-        assert!(!manager.should_spawn());
-
-        // Simulate time passing
-        manager.last_spawn_time = Instant::now() - Duration::from_secs(61);
-
-        // Should have a chance to spawn now (may not always spawn due to randomness)
-        let mut _spawned = false;
-        for _ in 0..30 {
-            if manager.should_spawn() {
-                _spawned = true;
-                break;
-            }
-            manager.last_spawn_time = Instant::now() - Duration::from_secs(61);
-        }
-        // At least one attempt should succeed with 20% chance over 30 tries
-    }
-
-    #[test]
-    fn test_sea_monster_manager_create() {
-        let manager = SeaMonsterManager::new();
-        let screen_bounds = Rect::new(0, 0, 80, 24);
-        let monster = manager.create_sea_monster(1, screen_bounds);
-
-        assert_eq!(monster.id(), 1);
-        assert_eq!(monster.entity_type(), "sea_monster");
-    }
-
-    #[test]
     fn test_sea_monster_positioning() {
         let screen_bounds = Rect::new(0, 0, 80, 24);
         let monster = SeaMonster::new(1, screen_bounds);
@@ -384,13 +321,5 @@ mod tests {
         // Monsters should be slightly below surface (y=2) and water_gap2 depth
         assert_eq!(monster.position().y, 2.0);
         assert_eq!(monster.depth(), 5);
-    }
-
-    #[test]
-    fn test_sea_monster_rarity() {
-        let manager = SeaMonsterManager::new();
-
-        // Sea monsters should have longer spawn intervals than other creatures
-        assert_eq!(manager.spawn_interval, Duration::from_secs(60));
     }
 }

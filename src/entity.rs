@@ -275,6 +275,9 @@ impl Animation {
     }
 }
 
+/// Death callback function type
+pub type DeathCallback = fn(&mut EntityManager, Rect);
+
 /// Core entity trait that all aquarium entities must implement
 pub trait Entity {
     fn id(&self) -> EntityId;
@@ -288,6 +291,11 @@ pub trait Entity {
     fn is_alive(&self) -> bool;
     fn kill(&mut self);
     fn entity_type(&self) -> &'static str;
+
+    /// Get death callback function (None means no replacement spawning)
+    fn death_callback(&self) -> Option<DeathCallback> {
+        None
+    }
 
     /// Check if this entity collides with another at given positions
     fn collides_with(&self, other: &dyn Entity) -> bool {
@@ -369,6 +377,7 @@ pub struct EntityManager {
     entities: HashMap<EntityId, Box<dyn Entity>>,
     depth_layers: HashMap<u8, Vec<EntityId>>,
     next_id: EntityId,
+    large_creature_id: Option<EntityId>, // Track single large creature
 }
 
 impl EntityManager {
@@ -377,6 +386,7 @@ impl EntityManager {
             entities: HashMap::new(),
             depth_layers: HashMap::new(),
             next_id: 1,
+            large_creature_id: None,
         }
     }
 
@@ -424,10 +434,41 @@ impl EntityManager {
             }
         }
 
-        // Remove dead entities
+        // Handle death callbacks and remove dead entities
         for id in dead_entities {
-            self.remove_entity(id);
+            self.handle_entity_death(id, screen_bounds);
         }
+    }
+
+    /// Handle entity death and trigger death callbacks
+    pub fn handle_entity_death(&mut self, id: EntityId, screen_bounds: Rect) {
+        if let Some(entity) = self.entities.get(&id) {
+            let death_callback = entity.death_callback();
+            let _entity_type = entity.entity_type().to_string();
+
+            // Check if this was the large creature
+            if self.large_creature_id == Some(id) {
+                self.large_creature_id = None;
+            }
+
+            // Remove the entity first
+            self.remove_entity(id);
+
+            // Then trigger death callback if one exists
+            if let Some(callback) = death_callback {
+                callback(self, screen_bounds);
+            }
+        }
+    }
+
+    /// Check if a large creature already exists
+    pub fn has_large_creature(&self) -> bool {
+        self.large_creature_id.is_some()
+    }
+
+    /// Set the current large creature ID
+    pub fn set_large_creature(&mut self, id: EntityId) {
+        self.large_creature_id = Some(id);
     }
 
     pub fn render_all(&self, buffer: &mut Buffer, screen_bounds: Rect) {

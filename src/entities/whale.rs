@@ -1,4 +1,4 @@
-use crate::entity::{Direction, Entity, EntityId, Position, Sprite, Velocity};
+use crate::entity::{DeathCallback, Direction, Entity, EntityId, Position, Sprite, Velocity};
 use rand::Rng;
 use ratatui::layout::Rect;
 use std::time::{Duration, Instant};
@@ -229,40 +229,9 @@ impl Entity for Whale {
     fn entity_type(&self) -> &'static str {
         "whale"
     }
-}
 
-/// Manager for whale spawning and lifecycle
-pub struct WhaleManager {
-    last_spawn_time: Instant,
-    spawn_interval: Duration,
-}
-
-impl WhaleManager {
-    pub fn new() -> Self {
-        Self {
-            last_spawn_time: Instant::now(),
-            spawn_interval: Duration::from_secs(30), // Spawn roughly every 30 seconds
-        }
-    }
-
-    pub fn should_spawn(&mut self) -> bool {
-        if self.last_spawn_time.elapsed() >= self.spawn_interval {
-            self.last_spawn_time = Instant::now();
-            // Random chance to spawn
-            rand::thread_rng().gen_bool(0.3) // 30% chance when interval elapses
-        } else {
-            false
-        }
-    }
-
-    pub fn create_whale(&self, id: EntityId, screen_bounds: Rect) -> Whale {
-        Whale::new(id, screen_bounds)
-    }
-}
-
-impl Default for WhaleManager {
-    fn default() -> Self {
-        Self::new()
+    fn death_callback(&self) -> Option<DeathCallback> {
+        Some(crate::spawning::random_object)
     }
 }
 
@@ -397,37 +366,5 @@ mod tests {
 
         whale.update(Duration::from_millis(16), screen_bounds);
         assert!(!whale.is_alive());
-    }
-
-    #[test]
-    fn test_whale_manager() {
-        let mut manager = WhaleManager::new();
-
-        // Should not spawn immediately after creation
-        assert!(!manager.should_spawn());
-
-        // Simulate time passing
-        manager.last_spawn_time = Instant::now() - Duration::from_secs(31);
-
-        // Should have a chance to spawn now (may not always spawn due to randomness)
-        let mut _spawned = false;
-        for _ in 0..20 {
-            if manager.should_spawn() {
-                _spawned = true;
-                break;
-            }
-            manager.last_spawn_time = Instant::now() - Duration::from_secs(31);
-        }
-        // At least one attempt should succeed with 30% chance over 20 tries
-    }
-
-    #[test]
-    fn test_whale_manager_create() {
-        let manager = WhaleManager::new();
-        let screen_bounds = Rect::new(0, 0, 80, 24);
-        let whale = manager.create_whale(1, screen_bounds);
-
-        assert_eq!(whale.id(), 1);
-        assert_eq!(whale.entity_type(), "whale");
     }
 }

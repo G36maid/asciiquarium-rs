@@ -5,6 +5,7 @@ pub mod depth;
 pub mod entities;
 pub mod entity;
 pub mod event;
+pub mod spawning;
 pub mod ui;
 
 fn main() -> color_eyre::Result<()> {

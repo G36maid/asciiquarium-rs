@@ -1,5 +1,5 @@
 use crate::depth;
-use crate::entity::{Direction, Entity, EntityId, Position, Sprite, Velocity};
+use crate::entity::{DeathCallback, Direction, Entity, EntityId, Position, Sprite, Velocity};
 use rand::Rng;
 use ratatui::{layout::Rect, style::Color};
 use std::time::{Duration, Instant};
@@ -447,6 +447,10 @@ impl Entity for Fish {
 
     fn entity_type(&self) -> &'static str {
         "fish"
+    }
+
+    fn death_callback(&self) -> Option<DeathCallback> {
+        Some(crate::spawning::add_fish)
     }
 }
 

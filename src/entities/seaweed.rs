@@ -1,4 +1,4 @@
-use crate::entity::{Animation, Entity, EntityId, Position, Sprite, Velocity};
+use crate::entity::{Animation, DeathCallback, Entity, EntityId, Position, Sprite, Velocity};
 use rand::Rng;
 use ratatui::layout::Rect;
 use std::time::{Duration, Instant};
@@ -177,52 +177,9 @@ impl Entity for Seaweed {
     fn entity_type(&self) -> &'static str {
         "seaweed"
     }
-}
 
-/// Seaweed manager handles seaweed population
-pub struct SeaweedManager {
-    last_spawn: Instant,
-    target_count: usize,
-}
-
-impl SeaweedManager {
-    pub fn new() -> Self {
-        Self {
-            last_spawn: Instant::now(),
-            target_count: 0,
-        }
-    }
-
-    /// Calculate target seaweed count based on screen width
-    /// Original: int(width / 15)
-    pub fn update_target_count(&mut self, screen_bounds: Rect) {
-        self.target_count = (screen_bounds.width as usize / 15).max(1);
-    }
-
-    /// Check if we should spawn new seaweed
-    pub fn should_spawn_seaweed(&mut self, current_count: usize) -> bool {
-        let now = Instant::now();
-
-        // Only spawn if below target and enough time has passed
-        if current_count < self.target_count
-            && now.duration_since(self.last_spawn) > Duration::from_secs(5)
-        {
-            self.last_spawn = now;
-            true
-        } else {
-            false
-        }
-    }
-
-    /// Get target seaweed count
-    pub fn target_count(&self) -> usize {
-        self.target_count
-    }
-}
-
-impl Default for SeaweedManager {
-    fn default() -> Self {
-        Self::new()
+    fn death_callback(&self) -> Option<DeathCallback> {
+        Some(crate::spawning::add_seaweed)
     }
 }
 
@@ -252,24 +209,6 @@ mod tests {
 
         // Should have different patterns for left and right
         assert_ne!(left.lines, right.lines);
-    }
-
-    #[test]
-    fn test_seaweed_manager() {
-        let mut manager = SeaweedManager::new();
-        let screen_bounds = Rect::new(0, 0, 80, 24);
-
-        manager.update_target_count(screen_bounds);
-        assert_eq!(manager.target_count(), 5); // 80/15 = 5.33 -> 5
-
-        // Set last_spawn to past time to allow spawning
-        manager.last_spawn = Instant::now() - Duration::from_secs(6);
-
-        // Should want to spawn when count is below target and enough time has passed
-        assert!(manager.should_spawn_seaweed(0));
-
-        // Should not spawn immediately again (time constraint)
-        assert!(!manager.should_spawn_seaweed(0));
     }
 
     #[test]

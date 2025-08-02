@@ -14,11 +14,11 @@ pub mod water_surface;
 pub mod whale;
 
 pub use bubble::Bubble;
-pub use castle::{Castle, CastleManager};
+pub use castle::Castle;
 pub use fish::{Fish, FishSpecies};
-pub use sea_monster::{SeaMonster, SeaMonsterManager};
-pub use seaweed::{Seaweed, SeaweedManager};
-pub use shark::{Shark, SharkManager, SharkTeeth};
-pub use ship::{Ship, ShipManager};
-pub use water_surface::{WaterSurface, WaterSurfaceManager};
-pub use whale::{Whale, WhaleManager};
+pub use sea_monster::SeaMonster;
+pub use seaweed::Seaweed;
+pub use shark::{Shark, SharkTeeth};
+pub use ship::Ship;
+pub use water_surface::WaterSurface;
+pub use whale::Whale;
