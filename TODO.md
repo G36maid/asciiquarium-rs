@@ -9,43 +9,45 @@ This document outlines the development roadmap for asciiquarium-rs, a faithful R
 **Environment**: ✅ Complete (water, seaweed, castle)
 **Fish System**: ✅ Enhanced with authentic behavior
 **Predators**: ✅ Sharks implemented
+**Large Creatures**: ✅ Complete (whales, ships, sea monsters)
 
 ### ✅ Working Features
 - **Core Framework**: Entity system, rendering, input handling, screen management
 - **Environment**: 4-layer animated water surface, swaying seaweed, castle decoration
 - **Fish System**: 6 species with authentic movement, randomized colors, bubble generation
 - **Shark System**: Predatory sharks with collision detection and fish hunting
+- **Large Creatures**: Whales with water spouts, ships with detailed hulls, animated sea monsters
 - **Color System**: Authentic Perl-style color randomization
 - **Screen Adaptation**: Dynamic resizing and entity scaling
 
 ## 🚧 Active Development
 
-### Phase 4: Large Creatures (In Progress)
+### Phase 4: Large Creatures ✅ Complete
 
-#### Next Priority: Whale System
-- [ ] Whale entity implementation
-  - [ ] Large ASCII art (left/right variants)
-  - [ ] Blue/cyan coloring
-  - [ ] Horizontal movement
-- [ ] Water spout animation
-  - [ ] 7-frame spout sequence
-  - [ ] Positioning above whale
-  - [ ] Timing and triggering
-- [ ] Whale manager and spawning
+#### ✅ Completed: Whale System
+- [x] Whale entity implementation
+  - [x] Large ASCII art (left/right variants)
+  - [x] Blue/cyan coloring
+  - [x] Horizontal movement
+- [x] Water spout animation
+  - [x] 7-frame spout sequence
+  - [x] Positioning above whale
+  - [x] Timing and triggering
+- [x] Whale manager and spawning
 
-#### Ship System
-- [ ] Ship entity implementation
-  - [ ] Surface-level positioning
-  - [ ] Detailed ASCII art
-  - [ ] Horizontal movement across water
-- [ ] Integration with random object spawning
+#### ✅ Completed: Ship System
+- [x] Ship entity implementation
+  - [x] Surface-level positioning
+  - [x] Detailed ASCII art with yellow masts and white hulls
+  - [x] Horizontal movement across water
+- [x] Integration with random object spawning
 
-#### Sea Monsters
-- [ ] Monster entity variants
-  - [ ] Two different monster designs
-  - [ ] Large tentacle-like appendages
-  - [ ] Dark/menacing coloring
-- [ ] Monster behavior and movement
+#### ✅ Completed: Sea Monsters
+- [x] Monster entity variants
+  - [x] Tentacle animation frames
+  - [x] Large creature with eyes
+  - [x] Green/dark coloring
+- [x] Monster behavior and movement
 
 ## 🎯 Next Up (Phase 5)
 

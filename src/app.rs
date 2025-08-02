@@ -1,6 +1,6 @@
 use crate::entities::{
-    Bubble, Castle, CastleManager, Fish, Seaweed, SeaweedManager, Shark, SharkManager, SharkTeeth,
-    WaterSurfaceManager,
+    Bubble, Castle, CastleManager, Fish, SeaMonsterManager, Seaweed, SeaweedManager, Shark,
+    SharkManager, SharkTeeth, ShipManager, WaterSurfaceManager, WhaleManager,
 };
 use crate::entity::{Entity, EntityManager};
 use crate::event::{AppEvent, Event, EventHandler};
@@ -41,6 +41,12 @@ pub struct App {
     pub castle_manager: CastleManager,
     /// Shark manager
     pub shark_manager: SharkManager,
+    /// Whale manager
+    pub whale_manager: WhaleManager,
+    /// Ship manager
+    pub ship_manager: ShipManager,
+    /// Sea monster manager
+    pub sea_monster_manager: SeaMonsterManager,
 }
 
 impl Default for App {
@@ -60,6 +66,9 @@ impl Default for App {
             seaweed_manager: SeaweedManager::new(),
             castle_manager: CastleManager::new(),
             shark_manager: SharkManager::new(),
+            whale_manager: WhaleManager::new(),
+            ship_manager: ShipManager::new(),
+            sea_monster_manager: SeaMonsterManager::new(),
         }
     }
 }
@@ -152,6 +161,15 @@ impl App {
         // Manage sharks
         self.maybe_spawn_shark(screen_bounds);
 
+        // Manage whales
+        self.maybe_spawn_whale(screen_bounds);
+
+        // Manage ships
+        self.maybe_spawn_ship(screen_bounds);
+
+        // Manage sea monsters
+        self.maybe_spawn_sea_monster(screen_bounds);
+
         // Handle shark-fish collisions
         self.handle_shark_collisions();
     }
@@ -174,6 +192,9 @@ impl App {
         self.seaweed_manager = SeaweedManager::new(); // Reset seaweed manager
         self.castle_manager = CastleManager::new(); // Reset castle manager
         self.shark_manager = SharkManager::new(); // Reset shark manager
+        self.whale_manager = WhaleManager::new(); // Reset whale manager
+        self.ship_manager = ShipManager::new(); // Reset ship manager
+        self.sea_monster_manager = SeaMonsterManager::new(); // Reset sea monster manager
     }
 
     /// Maybe spawn a new fish based on population and timing
@@ -416,6 +437,35 @@ impl App {
         // Remove sharks (they swim away after eating)
         for shark_id in sharks_to_remove {
             self.entity_manager.remove_entity(shark_id);
+        }
+    }
+
+    /// Maybe spawn whale based on timing
+    fn maybe_spawn_whale(&mut self, screen_bounds: Rect) {
+        if self.whale_manager.should_spawn() {
+            let whale_id = self.entity_manager.get_next_id();
+            let whale = self.whale_manager.create_whale(whale_id, screen_bounds);
+            self.entity_manager.add_entity(Box::new(whale));
+        }
+    }
+
+    /// Maybe spawn ship based on timing
+    fn maybe_spawn_ship(&mut self, screen_bounds: Rect) {
+        if self.ship_manager.should_spawn() {
+            let ship_id = self.entity_manager.get_next_id();
+            let ship = self.ship_manager.create_ship(ship_id, screen_bounds);
+            self.entity_manager.add_entity(Box::new(ship));
+        }
+    }
+
+    /// Maybe spawn sea monster based on timing
+    fn maybe_spawn_sea_monster(&mut self, screen_bounds: Rect) {
+        if self.sea_monster_manager.should_spawn() {
+            let monster_id = self.entity_manager.get_next_id();
+            let monster = self
+                .sea_monster_manager
+                .create_sea_monster(monster_id, screen_bounds);
+            self.entity_manager.add_entity(Box::new(monster));
         }
     }
 }

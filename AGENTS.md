@@ -20,6 +20,7 @@ When making any changes, always follow these steps:
 1. **Understand the Task:**
    - Read `TODO.md` to identify the next task.
    - Review `SPEC.md` for the current feature specification.
+   - If spec doesn't have detail, read the original `asciiquarium.pl` code.
    - Update and improve the todo and spec as needed.
 
 2. **Plan:**
