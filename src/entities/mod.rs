@@ -7,10 +7,12 @@ pub mod bubble;
 pub mod castle;
 pub mod fish;
 pub mod seaweed;
+pub mod shark;
 pub mod water_surface;
 
 pub use bubble::Bubble;
 pub use castle::{Castle, CastleManager};
 pub use fish::{Fish, FishSpecies};
 pub use seaweed::{Seaweed, SeaweedManager};
+pub use shark::{Shark, SharkManager, SharkTeeth};
 pub use water_surface::{WaterSurface, WaterSurfaceManager};

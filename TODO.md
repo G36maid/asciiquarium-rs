@@ -101,19 +101,22 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
 
 ## Phase 4: Predators and Large Entities
 
-### Shark System
-- [ ] Shark entity implementation
-  - [ ] Large ASCII art (left/right variants)
-  - [ ] White/cyan coloring
-  - [ ] Horizontal movement
-- [ ] Teeth system
-  - [ ] Separate collision entity
-  - [ ] Red coloring
-  - [ ] Position synchronization with shark
-- [ ] Fish predation
-  - [ ] Collision detection with fish
-  - [ ] Fish death animation/removal
-  - [ ] Shark feeding behavior
+### Shark System ✅ (COMPLETED)
+- [x] Shark entity implementation
+  - [x] Large ASCII art (left/right variants)
+  - [x] White/cyan coloring
+  - [x] Horizontal movement
+- [x] Teeth system
+  - [x] Separate collision entity
+  - [x] Red coloring
+  - [x] Position synchronization with shark
+- [x] Fish predation
+  - [x] Collision detection with fish
+  - [x] Fish death animation/removal
+  - [x] Shark feeding behavior
+- [x] SharkManager for spawning control
+- [x] Proper off-screen spawning and death
+- [x] Integration with main app loop
 
 ### Whale System
 - [ ] Whale entity implementation
@@ -272,6 +275,7 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
 - ✅ **Castle Background** - Static castle decoration with red/yellow color highlights, proper positioning, and screen resize handling
 - ✅ **Color Mapping System** - Implemented proper color randomization matching original Perl rand_color function
 - ✅ **Additional Fish Species** - Added Medium1 and Medium2 fish with original ASCII art and color masks
+- ✅ **Shark System** - Predatory sharks with teeth collision detection, fish eating behavior, and authentic ASCII art
 
 ### Known Issues to Address
 - 🔧 **Performance**: May need optimization for larger screens
@@ -290,8 +294,8 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
 - Preserve the meditative, relaxing nature of the original
 
 ### Priority Next Steps
-1. **Large Creatures** - Begin Phase 4 with sharks and whales
-2. **Performance Optimization** - Optimize for larger screens and many entities
-3. **Advanced Features** - Collision system and random object spawning
-4. **Complete Fish Species** - Add remaining big fish and old fish variants
-5. **Classic Mode** - Implement -c flag for original fish only
+1. **Whale System** - Implement whales with water spout animations
+2. **Ship System** - Add ships sailing across the water surface
+3. **Sea Monsters** - Implement underwater monsters with tentacles
+4. **Performance Optimization** - Optimize for larger screens and many entities
+5. **Advanced Features** - Enhanced collision system and random object spawning

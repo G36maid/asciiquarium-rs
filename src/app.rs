@@ -1,7 +1,8 @@
 use crate::entities::{
-    Bubble, Castle, CastleManager, Fish, Seaweed, SeaweedManager, WaterSurfaceManager,
+    Bubble, Castle, CastleManager, Fish, Seaweed, SeaweedManager, Shark, SharkManager, SharkTeeth,
+    WaterSurfaceManager,
 };
-use crate::entity::EntityManager;
+use crate::entity::{Entity, EntityManager};
 use crate::event::{AppEvent, Event, EventHandler};
 use rand::Rng;
 use ratatui::{
@@ -38,6 +39,8 @@ pub struct App {
     pub seaweed_manager: SeaweedManager,
     /// Castle manager
     pub castle_manager: CastleManager,
+    /// Shark manager
+    pub shark_manager: SharkManager,
 }
 
 impl Default for App {
@@ -56,6 +59,7 @@ impl Default for App {
             water_initialized: false,
             seaweed_manager: SeaweedManager::new(),
             castle_manager: CastleManager::new(),
+            shark_manager: SharkManager::new(),
         }
     }
 }
@@ -144,6 +148,12 @@ impl App {
 
         // Manage castle
         self.maybe_spawn_castle(screen_bounds);
+
+        // Manage sharks
+        self.maybe_spawn_shark(screen_bounds);
+
+        // Handle shark-fish collisions
+        self.handle_shark_collisions();
     }
 
     /// Set running to false to quit the application.
@@ -163,6 +173,7 @@ impl App {
         self.water_initialized = false; // Force water surface recreation
         self.seaweed_manager = SeaweedManager::new(); // Reset seaweed manager
         self.castle_manager = CastleManager::new(); // Reset castle manager
+        self.shark_manager = SharkManager::new(); // Reset shark manager
     }
 
     /// Maybe spawn a new fish based on population and timing
@@ -268,6 +279,29 @@ impl App {
         }
     }
 
+    /// Maybe spawn shark based on timing
+    fn maybe_spawn_shark(&mut self, screen_bounds: Rect) {
+        if self.shark_manager.should_spawn_shark() {
+            let shark_id = self.entity_manager.get_next_id();
+            let teeth_id = self.entity_manager.get_next_id();
+
+            // Create shark
+            let mut shark = Shark::new_random(shark_id, screen_bounds);
+
+            // Create teeth at shark's teeth position
+            let teeth_position = shark.get_teeth_position();
+            let teeth_velocity = shark.velocity();
+            let teeth = SharkTeeth::new(teeth_id, teeth_position, teeth_velocity, shark_id);
+
+            // Associate shark with teeth
+            shark.set_teeth_id(teeth_id);
+
+            // Add both entities
+            self.entity_manager.add_entity(Box::new(shark));
+            self.entity_manager.add_entity(Box::new(teeth));
+        }
+    }
+
     /// Get entity manager reference for rendering
     pub fn entity_manager(&self) -> &EntityManager {
         &self.entity_manager
@@ -321,6 +355,67 @@ impl App {
                     self.entity_manager.add_entity(Box::new(layer));
                 }
             }
+        }
+    }
+
+    /// Handle collisions between shark teeth and fish
+    fn handle_shark_collisions(&mut self) {
+        let mut fish_to_remove = Vec::new();
+        let mut teeth_to_remove = Vec::new();
+        let mut sharks_to_remove = Vec::new();
+
+        // Get all collision pairs
+        let collisions = self.entity_manager.check_collisions();
+
+        for (id1, id2) in collisions {
+            // Get entities by type to check collision combinations
+            let fish_entities = self.entity_manager.get_entities_by_type("fish");
+            let teeth_entities = self.entity_manager.get_entities_by_type("shark_teeth");
+
+            // Check if this collision involves fish and shark teeth
+            let fish_involved = fish_entities.iter().any(|e| e.id() == id1 || e.id() == id2);
+            let teeth_involved = teeth_entities
+                .iter()
+                .any(|e| e.id() == id1 || e.id() == id2);
+
+            if fish_involved && teeth_involved {
+                // Determine which is fish and which is teeth
+                let fish_id = if fish_entities.iter().any(|e| e.id() == id1) {
+                    id1
+                } else {
+                    id2
+                };
+                let teeth_id = if teeth_entities.iter().any(|e| e.id() == id1) {
+                    id1
+                } else {
+                    id2
+                };
+
+                // Mark entities for removal
+                fish_to_remove.push(fish_id);
+                teeth_to_remove.push(teeth_id);
+
+                // Find associated shark (simplified - remove all sharks when any teeth hit)
+                let shark_entities = self.entity_manager.get_entities_by_type("shark");
+                for shark in shark_entities {
+                    sharks_to_remove.push(shark.id());
+                }
+            }
+        }
+
+        // Remove eaten fish
+        for fish_id in fish_to_remove {
+            self.entity_manager.remove_entity(fish_id);
+        }
+
+        // Remove teeth that hit fish
+        for teeth_id in teeth_to_remove {
+            self.entity_manager.remove_entity(teeth_id);
+        }
+
+        // Remove sharks (they swim away after eating)
+        for shark_id in sharks_to_remove {
+            self.entity_manager.remove_entity(shark_id);
         }
     }
 }
