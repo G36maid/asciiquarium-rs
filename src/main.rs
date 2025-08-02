@@ -1,6 +1,9 @@
 use crate::app::App;
 
 pub mod app;
+pub mod depth;
+pub mod entities;
+pub mod entity;
 pub mod event;
 pub mod ui;
 
