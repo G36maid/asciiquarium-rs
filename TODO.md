@@ -5,7 +5,7 @@ This document outlines the development roadmap for asciiquarium-rs, a faithful R
 ## 🎯 Current Status
 
 **Version**: Development - Phase 1 Complete (Death Callbacks + Simplified Architecture)
-**Priority**: Phase 2 - Complete missing features (Big Fish, Bubbles, Classic Mode)
+**Priority**: Phase 2 - Complete missing features (Correct Fish Species, Big Fish, Bubbles)
 
 ### 🎯 **Hybrid Strategy: Best of Both Worlds**
 
@@ -75,6 +75,15 @@ random_objects = [ship, whale, monster, big_fish, shark]
 
 ## 🎯 Phase 2: Missing Original Features
 
+### Fish Species Correction (Priority 1)
+- [ ] **Fix fish species to match original exactly**
+  - [ ] Remove incorrect Medium1/Medium2/Large1/Large2 fish
+  - [ ] Implement correct "new fish" species (2 variants from original)
+  - [ ] Implement correct "old fish" species (10+ variants from original)
+  - [ ] Use original fish selection logic (90% old fish, 10% new fish)
+  - [ ] Fix fish ASCII art to match original exactly
+- [ ] **Verify fish color randomization matches original**
+
 ### Big Fish Species (Part of Random Objects)
 - [ ] **add_big_fish_1() implementation**
   - [ ] Large detailed ASCII art from original
@@ -83,7 +92,7 @@ random_objects = [ship, whale, monster, big_fish, shark]
 - [ ] **add_big_fish_2() implementation**
   - [ ] Alternative big fish design
   - [ ] Same coloring and depth as big_fish_1
-- [ ] **Random selection between big fish variants**
+- [ ] **Random selection between big fish variants (67% big_fish_2, 33% big_fish_1)**
 - [ ] **Integration into death callback chain**
 
 ### Bubble System
@@ -95,12 +104,6 @@ random_objects = [ship, whale, monster, big_fish, shark]
   - [ ] Vertical rise to surface
   - [ ] Pop when reaching water surface
 - [ ] **Bubble death callback** (bubbles just die, no replacement)
-
-### Classic Mode (-c flag)
-- [ ] **Command line argument parsing**
-- [ ] **Disable new fish species in classic mode**
-- [ ] **Disable new monsters in classic mode**
-- [ ] **Use only original fish variants**
 
 ## ✅ Phase 1: COMPLETED - Code Simplification Tasks  
 
@@ -152,9 +155,10 @@ random_objects = [ship, whale, monster, big_fish, shark]
 ## 🔴 Current Implementation Status
 
 ### ✅ **Correctly Implemented (Keep & Enhance)**
+- **Death callback system** (authentic to original)
+- **Single large creature constraint** (authentic to original)
+- **Population formulas** (matches original exactly)
 - **Entity ASCII art and sprites** (whale, ship, monster sprites are correct)
-- **Fish color randomization** (matches original rand_color system)
-- **Fish horizontal movement** (no vertical drift, correct)
 - **Water surface animation** (4-layer system correct)
 - **Castle positioning and art** (static background correct)
 - **Seaweed sway animation** (2-frame correct)
@@ -163,20 +167,15 @@ random_objects = [ship, whale, monster, big_fish, shark]
 - **Population scaling with screen changes** (our improvement - keep!)
 - **Robust entity management** (our improvement - keep!)
 
-### 🔧 **Needs Modification (Simplify and Fix)**
-- **Complex manager system** → Replace with simple functions like original
-- **Over-engineered entity trait** → Simplify to 4-5 essential methods
-- **Multiple simultaneous large creatures** → Add single creature constraint
-- **Timer-based spawning** → Replace with death callback system
-- **Over-complex data structures** → Flatten to essential fields only
-- **Excessive error handling** → Simplify to direct calls
+### 🔧 **Needs Modification (Current Focus)**
+- **Fish species implementation** → Fix to match original exactly (wrong species currently)
+- **Fish color randomization** → Verify matches original rand_color system
+- **Fish selection logic** → Implement 90% old fish, 10% new fish like original
 
 ### 🎯 **Features to Add**
-- **Death callback system** (core authenticity)
-- **Single large creature constraint** (original behavior)
+- **Correct fish species** (fix current wrong implementation)
 - **Big fish species** (complete random object system)
 - **Bubble system** (fish bubble generation and physics)
-- **Classic mode** (-c command line flag)
 
 ## 📋 Implementation Priority
 
@@ -189,11 +188,11 @@ random_objects = [ship, whale, monster, big_fish, shark]
 6. ✅ **Code reduction achieved** → 6,000 → 4,000 lines (more reduction possible)
 
 ### 🎯 Priority 2: Complete Missing Features (Current Focus)
+1. **Fix fish species** → Implement correct old/new fish like original
+2. **Big fish species** → Add to simplified random object system  
+3. **Bubble system** → Simple fish bubble physics
 
 ### Priority 3: Complete Feature Set
-1. **Big fish species** → Add to simplified random object system
-2. **Bubble system** → Simple fish bubble physics
-3. **Classic mode** → -c flag support
 
 ### Priority 4: Final Polish
 1. **Performance optimization** (should be better after simplification)
