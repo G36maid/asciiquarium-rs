@@ -1,4 +1,6 @@
-use crate::entities::{Bubble, Fish, Seaweed, SeaweedManager, WaterSurfaceManager};
+use crate::entities::{
+    Bubble, Castle, CastleManager, Fish, Seaweed, SeaweedManager, WaterSurfaceManager,
+};
 use crate::entity::EntityManager;
 use crate::event::{AppEvent, Event, EventHandler};
 use rand::Rng;
@@ -34,6 +36,8 @@ pub struct App {
     pub water_initialized: bool,
     /// Seaweed manager
     pub seaweed_manager: SeaweedManager,
+    /// Castle manager
+    pub castle_manager: CastleManager,
 }
 
 impl Default for App {
@@ -51,6 +55,7 @@ impl Default for App {
             water_surface_manager: WaterSurfaceManager::new(),
             water_initialized: false,
             seaweed_manager: SeaweedManager::new(),
+            castle_manager: CastleManager::new(),
         }
     }
 }
@@ -136,6 +141,9 @@ impl App {
 
         // Manage seaweed population
         self.maybe_spawn_seaweed(screen_bounds);
+
+        // Manage castle
+        self.maybe_spawn_castle(screen_bounds);
     }
 
     /// Set running to false to quit the application.
@@ -154,6 +162,7 @@ impl App {
         self.last_fish_spawn = Instant::now();
         self.water_initialized = false; // Force water surface recreation
         self.seaweed_manager = SeaweedManager::new(); // Reset seaweed manager
+        self.castle_manager = CastleManager::new(); // Reset castle manager
     }
 
     /// Maybe spawn a new fish based on population and timing
@@ -229,6 +238,33 @@ impl App {
             let seaweed_id = self.entity_manager.get_next_id();
             let seaweed = Seaweed::new_random(seaweed_id, screen_bounds);
             self.entity_manager.add_entity(Box::new(seaweed));
+        }
+    }
+
+    /// Maybe spawn castle based on screen size and manager state
+    fn maybe_spawn_castle(&mut self, screen_bounds: Rect) {
+        if self.castle_manager.should_create_castle(screen_bounds) {
+            let castle_id = self.entity_manager.get_next_id();
+            let castle = Castle::new(castle_id, screen_bounds);
+            self.entity_manager.add_entity(Box::new(castle));
+            self.castle_manager.mark_castle_created(screen_bounds);
+        } else if self.castle_manager.should_reposition_castle(screen_bounds) {
+            // Remove existing castle and recreate it at new position
+            let castle_entities: Vec<_> = self
+                .entity_manager
+                .get_entities_by_type("castle")
+                .iter()
+                .map(|e| e.id())
+                .collect();
+
+            for castle_id in castle_entities {
+                self.entity_manager.remove_entity(castle_id);
+            }
+
+            // Create new castle at correct position
+            let castle_id = self.entity_manager.get_next_id();
+            let castle = Castle::new(castle_id, screen_bounds);
+            self.entity_manager.add_entity(Box::new(castle));
         }
     }
 

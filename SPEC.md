@@ -47,6 +47,7 @@ The application uses an entity-component system where all animated objects are e
 - Green colored
 - Lives 8-12 minutes before respawning
 - Animation speed: 0.25-0.30 fps
+- Spawning frequency: Every 5 seconds when below target (⚠️ **Known Issue**: Spawning rate differs from original Perl version)
 
 ## Fish System
 
@@ -211,6 +212,12 @@ struct AnimationFrame {
 - Performance optimization
 - Classic mode implementation
 - Additional fish species
+
+## Known Issues
+
+### Spawning Frequency Discrepancies
+- **Seaweed Spawning**: Current implementation spawns seaweed every 5 seconds when below target count, but this frequency differs from the original Perl version. Needs investigation and calibration against original spawning behavior.
+- **Future Calibration**: All spawning timings should be verified against the original asciiquarium behavior for authenticity.
 
 ## Data Assets
 

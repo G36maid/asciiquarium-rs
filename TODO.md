@@ -36,13 +36,16 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
 - [x] Dynamic screen resize handling
 - [x] Proper depth layering with fish swimming behind/in front
 
-### Background Elements - **NEXT UP**
-- [ ] Castle implementation
-  - [ ] Multi-line ASCII art rendering
-  - [ ] Color mask application (red/yellow highlights)
-  - [ ] Positioning (bottom-right)
-- [ ] Depth layer management
-- [ ] Static entity system
+### Background Elements ✅ (COMPLETED)
+- [x] Castle implementation
+  - [x] Multi-line ASCII art rendering
+  - [x] Color mask application (red/yellow highlights)
+  - [x] Positioning (bottom-right)
+- [x] Depth layer management
+- [x] Static entity system
+- [x] CastleManager for lifecycle management
+- [x] Screen resize handling with repositioning
+- [x] Integration with main app loop
 
 ### Seaweed System ✅ (COMPLETED)
 - [x] Seaweed entity implementation
@@ -242,8 +245,8 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
 
 ## Current Status
 
-**Active Phase**: Phase 2 - Environment System (Castle next)
-**Next Milestone**: Implement castle background decoration
+**Active Phase**: Phase 3 - Fish System Enhancement & Phase 4 - Large Entities
+**Next Milestone**: Fix color mapping and add more fish species, then implement sharks and whales
 **Recent Completion**: Animated 4-layer water surface system
 
 ### Testing Status
@@ -266,6 +269,7 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
 - ✅ **FIXED: Screen bounds** - App now uses actual terminal size instead of hardcoded 80x24
 - ✅ **Animated Water Surface** - 4-layer wave animation with proper depth sorting and screen adaptation
 - ✅ **Seaweed System** - Implemented swaying seaweed with 2-frame animation, population management, and proper lifecycle
+- ✅ **Castle Background** - Static castle decoration with red/yellow color highlights, proper positioning, and screen resize handling
 
 ### Known Issues to Address
 - 🔧 **Color Issue**: Fish colors don't exactly match original code masks
@@ -284,8 +288,8 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
 - Preserve the meditative, relaxing nature of the original
 
 ### Priority Next Steps
-1. **Castle Background** - Add the castle decoration at bottom-right with proper colors
-2. **Fix Color Mapping** - Make fish colors match original color mask system exactly
-3. **Add More Fish Species** - Port remaining fish designs from original
-4. **Large Creatures** - Begin Phase 4 with sharks and whales
-5. **Performance Optimization** - Optimize for larger screens and many entities
+1. **Fix Color Mapping** - Make fish colors match original color mask system exactly
+2. **Add More Fish Species** - Port remaining fish designs from original
+3. **Large Creatures** - Begin Phase 4 with sharks and whales
+4. **Performance Optimization** - Optimize for larger screens and many entities
+5. **Advanced Features** - Collision system and random object spawning

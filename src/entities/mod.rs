@@ -4,11 +4,13 @@
 //! in the aquarium, including fish, bubbles, seaweed, and other creatures.
 
 pub mod bubble;
+pub mod castle;
 pub mod fish;
 pub mod seaweed;
 pub mod water_surface;
 
 pub use bubble::Bubble;
+pub use castle::{Castle, CastleManager};
 pub use fish::{Fish, FishSpecies};
 pub use seaweed::{Seaweed, SeaweedManager};
 pub use water_surface::{WaterSurface, WaterSurfaceManager};
