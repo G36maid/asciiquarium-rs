@@ -5,6 +5,8 @@
 
 pub mod bubble;
 pub mod fish;
+pub mod water_surface;
 
 pub use bubble::Bubble;
 pub use fish::{Fish, FishSpecies};
+pub use water_surface::{WaterSurface, WaterSurfaceManager};

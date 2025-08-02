@@ -17,12 +17,13 @@ impl Bubble {
     /// Create a new bubble at the specified position
     pub fn new(id: EntityId, position: Position) -> Self {
         // Create the 5-frame bubble animation: '.', 'o', 'O', 'O', 'O'
+        // Use cyan color mask for all frames
         let frames = vec![
-            Sprite::from_ascii_art(".", None),
-            Sprite::from_ascii_art("o", None),
-            Sprite::from_ascii_art("O", None),
-            Sprite::from_ascii_art("O", None),
-            Sprite::from_ascii_art("O", None),
+            Sprite::from_ascii_art(".", Some("C")),
+            Sprite::from_ascii_art("o", Some("C")),
+            Sprite::from_ascii_art("O", Some("C")),
+            Sprite::from_ascii_art("O", Some("C")),
+            Sprite::from_ascii_art("O", Some("C")),
         ];
 
         let animation = Animation::new(

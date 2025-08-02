@@ -1,4 +1,4 @@
-use crate::entities::{Bubble, Fish};
+use crate::entities::{Bubble, Fish, WaterSurfaceManager};
 use crate::entity::EntityManager;
 use crate::event::{AppEvent, Event, EventHandler};
 use rand::Rng;
@@ -26,6 +26,12 @@ pub struct App {
     pub last_fish_spawn: Instant,
     /// Time since last bubble spawn
     pub last_bubble_spawn: Instant,
+    /// Current screen bounds
+    pub screen_bounds: Rect,
+    /// Water surface manager
+    pub water_surface_manager: WaterSurfaceManager,
+    /// Whether water surface has been initialized
+    pub water_initialized: bool,
 }
 
 impl Default for App {
@@ -39,6 +45,9 @@ impl Default for App {
             paused: false,
             last_fish_spawn: now,
             last_bubble_spawn: now,
+            screen_bounds: Rect::new(0, 0, 80, 24), // Default size
+            water_surface_manager: WaterSurfaceManager::new(),
+            water_initialized: false,
         }
     }
 }
@@ -52,6 +61,10 @@ impl App {
     /// Run the application's main loop.
     pub fn run(mut self, mut terminal: DefaultTerminal) -> color_eyre::Result<()> {
         while self.running {
+            // Get terminal size and update screen bounds
+            let size = terminal.size()?;
+            self.screen_bounds = Rect::new(0, 0, size.width, size.height);
+
             terminal.draw(|frame| frame.render_widget(&self, frame.area()))?;
             self.handle_events()?;
         }
@@ -100,9 +113,14 @@ impl App {
         let delta_time = now.duration_since(self.last_update);
         self.last_update = now;
 
-        // Screen bounds will be updated in render, use last known size or default
-        // This is a limitation - we'll improve this when we refactor the update cycle
-        let screen_bounds = Rect::new(0, 0, 80, 24); // Default size for now
+        // Use stored screen bounds
+        let screen_bounds = self.screen_bounds;
+
+        // Initialize water surface if not done yet
+        self.maybe_initialize_water_surface();
+
+        // Update water surface for screen size changes
+        self.update_water_surface();
 
         // Update all entities
         self.entity_manager.update_all(delta_time, screen_bounds);
@@ -128,6 +146,7 @@ impl App {
     pub fn redraw(&mut self) {
         self.entity_manager = EntityManager::new();
         self.last_fish_spawn = Instant::now();
+        self.water_initialized = false; // Force water surface recreation
     }
 
     /// Maybe spawn a new fish based on population and timing
@@ -143,7 +162,7 @@ impl App {
 
         // Spawn fish if below target and enough time has passed
         if current_fish_count < target_fish_count
-            && now.duration_since(self.last_fish_spawn) > Duration::from_millis(500)
+            && now.duration_since(self.last_fish_spawn) > Duration::from_millis(2000)
         {
             let fish_id = self.entity_manager.get_next_id();
             let fish = Fish::new_random(fish_id, screen_bounds);
@@ -156,8 +175,8 @@ impl App {
     fn maybe_spawn_bubbles(&mut self) {
         let now = Instant::now();
 
-        // Only spawn bubbles every 2-4 seconds
-        if now.duration_since(self.last_bubble_spawn) < Duration::from_millis(2000) {
+        // Only spawn bubbles every 0.5-1 seconds for testing
+        if now.duration_since(self.last_bubble_spawn) < Duration::from_millis(500) {
             return;
         }
 
@@ -166,9 +185,9 @@ impl App {
             return;
         }
 
-        // Random chance to spawn a bubble (about 30% chance when timer allows)
+        // Random chance to spawn a bubble (about 80% chance when timer allows for testing)
         let mut rng = rand::thread_rng();
-        if rng.gen_bool(0.3) {
+        if rng.gen_bool(0.8) {
             // Pick a random fish to emit a bubble
             let fish_index = rng.gen_range(0..fish_entities.len());
             let fish = fish_entities[fish_index];
@@ -194,20 +213,54 @@ impl App {
         &self.entity_manager
     }
 
-    /// Update method that can be called from render with actual screen bounds
-    pub fn update_with_bounds(&mut self, screen_bounds: Rect) {
-        if self.paused {
-            return;
+    /// Initialize water surface if not already done
+    fn maybe_initialize_water_surface(&mut self) {
+        if !self.water_initialized && self.screen_bounds.width > 0 && self.screen_bounds.height > 0
+        {
+            let start_id = self.entity_manager.get_next_id();
+            let water_layers = self
+                .water_surface_manager
+                .initialize(self.screen_bounds, start_id);
+
+            // Add water surface layers to entity manager
+            for layer in water_layers {
+                self.entity_manager.add_entity(Box::new(layer));
+            }
+
+            self.water_initialized = true;
         }
+    }
 
-        let now = Instant::now();
-        let delta_time = now.duration_since(self.last_update);
-        self.last_update = now;
+    /// Update water surface for screen size changes
+    fn update_water_surface(&mut self) {
+        if self.water_initialized {
+            let layers_updated = self
+                .water_surface_manager
+                .update_for_screen_size(self.screen_bounds);
 
-        // Update all entities with actual screen bounds
-        self.entity_manager.update_all(delta_time, screen_bounds);
+            if layers_updated {
+                // Remove old water surface entities
+                let water_entities: Vec<_> = self
+                    .entity_manager
+                    .get_entities_by_type("water_surface")
+                    .iter()
+                    .map(|e| e.id())
+                    .collect();
 
-        // Spawn new fish periodically
-        self.maybe_spawn_fish(screen_bounds);
+                for id in water_entities {
+                    self.entity_manager.remove_entity(id);
+                }
+
+                // Add updated water surface layers
+                let start_id = self.entity_manager.get_next_id();
+                let new_layers = self
+                    .water_surface_manager
+                    .initialize(self.screen_bounds, start_id);
+
+                for layer in new_layers {
+                    self.entity_manager.add_entity(Box::new(layer));
+                }
+            }
+        }
     }
 }

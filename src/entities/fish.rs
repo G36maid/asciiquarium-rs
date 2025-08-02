@@ -172,14 +172,14 @@ impl Fish {
 
         let (x, dx) = match direction {
             Direction::Right => {
-                // Start from left side, move right
-                let x = 1.0 - sprite_bounds.0 as f32;
+                // Start completely off-screen to the left, move right
+                let x = -(sprite_bounds.0 as f32 + 5.0);
                 let speed = rng.gen_range(0.5..2.0);
                 (x, speed)
             }
             Direction::Left => {
-                // Start from right side, move left
-                let x = screen_bounds.width as f32 - 2.0;
+                // Start completely off-screen to the right, move left
+                let x = screen_bounds.width as f32 + sprite_bounds.0 as f32 + 5.0;
                 let speed = rng.gen_range(0.5..2.0);
                 (x, -speed)
             }
@@ -299,14 +299,16 @@ impl Fish {
     /// Check if fish is off-screen and should die
     fn check_offscreen_death(&mut self, screen_bounds: Rect) {
         let sprite_bounds = self.get_current_sprite().get_bounding_box();
-        let pos = self.position.to_screen_coords();
+        let pos_x = self.position.x;
+        let pos_y = self.position.y;
 
-        // Check if completely off screen
-        if pos.0 > screen_bounds.width + sprite_bounds.0
-            || (pos.0 as i32) < -(sprite_bounds.0 as i32)
-            || pos.1 > screen_bounds.height + sprite_bounds.1
-            || (pos.1 as i32) < -(sprite_bounds.1 as i32)
-        {
+        // Check if completely off screen with generous margins
+        let off_left = pos_x < -(sprite_bounds.0 as f32 + 10.0);
+        let off_right = pos_x > screen_bounds.width as f32 + sprite_bounds.0 as f32 + 10.0;
+        let off_top = pos_y < -(sprite_bounds.1 as f32 + 5.0);
+        let off_bottom = pos_y > screen_bounds.height as f32 + sprite_bounds.1 as f32 + 5.0;
+
+        if off_left || off_right || off_top || off_bottom {
             self.alive = false;
         }
     }

@@ -24,17 +24,19 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
   - [x] Dynamic resize handling
   - [x] Coordinate system setup
 
-## Phase 2: Environment System
+## Phase 2: Environment System ✅ (PARTIALLY COMPLETED)
 
-### Water Surface
-- [ ] Implement 4-layer water surface animation
-  - [ ] Tileable water segments
-  - [ ] Wave animation timing
-  - [ ] Cyan coloring
-- [ ] Screen-width tiling system
-- [ ] Water surface collision detection
+### Water Surface ✅ (COMPLETED)
+- [x] Implement 4-layer water surface animation
+  - [x] Tileable water segments
+  - [x] Wave animation timing (8-frame smooth scrolling)
+  - [x] Cyan coloring
+- [x] Screen-width tiling system
+- [x] Water surface collision detection (bubbles pop at surface)
+- [x] Dynamic screen resize handling
+- [x] Proper depth layering with fish swimming behind/in front
 
-### Background Elements
+### Background Elements - **NEXT UP**
 - [ ] Castle implementation
   - [ ] Multi-line ASCII art rendering
   - [ ] Color mask application (red/yellow highlights)
@@ -42,7 +44,7 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
 - [ ] Depth layer management
 - [ ] Static entity system
 
-### Seaweed System
+### Seaweed System - **NEXT UP**
 - [ ] Seaweed entity implementation
   - [ ] Random height generation (3-7 chars)
   - [ ] 2-frame swaying animation
@@ -237,9 +239,15 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
 
 ## Current Status
 
-**Active Phase**: Phase 2 - Environment System (Water surface animation next)
-**Next Milestone**: Implement animated water surface and seaweed
-**Recent Completion**: Bubble system with fish emission and surface collision
+**Active Phase**: Phase 2 - Environment System (Seaweed and Castle next)
+**Next Milestone**: Implement swaying seaweed and castle background
+**Recent Completion**: Animated 4-layer water surface system
+
+### Testing Status
+- ✅ **Bubbles**: Now visible as bright cyan characters rising from fish
+- ✅ **Fish Movement**: Fish spawn off-screen and swim across properly
+- ✅ **Fish Lifecycle**: Fish disappear when leaving screen boundaries
+- ✅ **Screen Adaptation**: Works correctly on different terminal sizes
 
 ### Recent Fixes
 - ✅ Fixed fish direction mapping (sprites now face correct direction)
@@ -250,11 +258,16 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
 - ✅ Implemented bubble system with 5-frame animation
 - ✅ Added fish-to-bubble spawning with direction awareness
 - ✅ Bubble physics with surface collision detection
+- ✅ **FIXED: Background transparency** - Removed solid blue background hiding bubbles
+- ✅ **FIXED: Fish lifecycle** - Fish now spawn completely off-screen and die when leaving
+- ✅ **FIXED: Screen bounds** - App now uses actual terminal size instead of hardcoded 80x24
+- ✅ **Animated Water Surface** - 4-layer wave animation with proper depth sorting and screen adaptation
 
 ### Known Issues to Address
 - 🔧 **Color Issue**: Fish colors don't exactly match original code masks
 - 🔧 **Missing Species**: Need to add more fish species from original
 - 🔧 **Performance**: May need optimization for larger screens
+- 🔧 **Debug Output**: Remove debug print statements from fish off-screen detection
 
 ---
 
@@ -267,8 +280,8 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
 - Preserve the meditative, relaxing nature of the original
 
 ### Priority Next Steps
-1. **Water Surface Animation** - Implement animated tileable water waves at top
-2. **Fix Color Mapping** - Make fish colors match original color mask system
-3. **Add Seaweed System** - Swaying seaweed plants at bottom
+1. **Seaweed System** - Implement swaying seaweed plants at bottom with 2-frame animation
+2. **Castle Background** - Add the castle decoration at bottom-right with proper colors
+3. **Fix Color Mapping** - Make fish colors match original color mask system exactly
 4. **Add More Fish Species** - Port remaining fish designs from original
-5. **Castle Background** - Add the castle decoration at bottom-right
+5. **Large Creatures** - Begin Phase 4 with sharks and whales

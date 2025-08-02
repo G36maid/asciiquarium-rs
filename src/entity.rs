@@ -289,9 +289,20 @@ pub trait Entity {
                     let cell = buffer.cell_mut((x, y)).unwrap();
                     cell.set_char(ch);
 
-                    // Apply color from mask if available
+                    // Apply color from mask if available, or default colors by entity type
                     if let Some(color) = sprite.get_color_at(col_idx, row_idx) {
                         cell.set_fg(color);
+                    } else {
+                        // Apply default colors based on entity type
+                        let default_color = match self.entity_type() {
+                            "bubble" => Color::Cyan,
+                            "fish" => Color::Yellow,
+                            "seaweed" => Color::Green,
+                            "shark" => Color::White,
+                            "whale" => Color::Blue,
+                            _ => Color::White,
+                        };
+                        cell.set_fg(default_color);
                     }
                 }
             }
