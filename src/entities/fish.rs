@@ -267,8 +267,8 @@ impl Fish {
         // Random depth in fish layer
         let depth = depth::random_fish_depth();
 
-        // Small random vertical drift
-        let dy = rng.gen_range(-0.1..0.1);
+        // Fish only move horizontally (no vertical movement in original)
+        let dy = 0.0;
 
         Self {
             id,
@@ -429,17 +429,9 @@ impl Entity for Fish {
         // Update age
         self.age = self.created_at.elapsed();
 
-        // Update position based on velocity
+        // Update position based on velocity (fish only move horizontally)
         self.position.x += self.velocity.dx * delta_time.as_secs_f32() * 60.0; // Scale for 60 FPS
-        self.position.y += self.velocity.dy * delta_time.as_secs_f32() * 60.0;
-
-        // Add some random movement variation
-        let mut rng = rand::thread_rng();
-        if rng.gen_bool(0.01) {
-            // 1% chance per frame
-            self.velocity.dy += rng.gen_range(-0.05..0.05);
-            self.velocity.dy = self.velocity.dy.clamp(-0.5, 0.5); // Limit vertical speed
-        }
+        // Fish don't move vertically in the original implementation
 
         // Check if fish should die (off-screen)
         self.check_offscreen_death(screen_bounds);

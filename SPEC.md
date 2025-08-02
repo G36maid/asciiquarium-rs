@@ -67,7 +67,7 @@ More detailed fish species with:
 
 ### Fish Behavior
 - **Spawning**: Based on screen size (screen_area / 350 fish)
-- **Movement**: Horizontal swimming with slight vertical drift
+- **Movement**: Horizontal swimming only (no vertical movement, matching original)
 - **Bubble Generation**: Random chance to emit bubbles while swimming
 - **Collision**: Fish die when touching sharks or other deadly entities
 - **Schooling**: Multiple depth layers create schooling illusion
@@ -222,6 +222,10 @@ struct AnimationFrame {
 ### Color System Status
 - **Fish Colors**: ✅ **FIXED** - Color randomization now matches original Perl `rand_color` function with proper number-to-color mapping
 - **Color Masks**: ✅ **FIXED** - Fish now use randomized color masks identical to original implementation
+
+### Movement System Status
+- **Fish Movement**: ✅ **FIXED** - Fish now move horizontally only, matching original Perl implementation (`callback_args => [ $speed, 0, 0 ]`)
+- **Authentic Behavior**: Removed incorrect vertical drift and random movement variations
 
 ## Data Assets
 
