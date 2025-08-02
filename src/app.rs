@@ -1,6 +1,7 @@
-use crate::entities::Fish;
+use crate::entities::{Bubble, Fish};
 use crate::entity::EntityManager;
 use crate::event::{AppEvent, Event, EventHandler};
+use rand::Rng;
 use ratatui::{
     DefaultTerminal,
     crossterm::event::{KeyCode, KeyEvent, KeyModifiers},
@@ -23,6 +24,8 @@ pub struct App {
     pub paused: bool,
     /// Time since last fish spawn
     pub last_fish_spawn: Instant,
+    /// Time since last bubble spawn
+    pub last_bubble_spawn: Instant,
 }
 
 impl Default for App {
@@ -35,6 +38,7 @@ impl Default for App {
             last_update: now,
             paused: false,
             last_fish_spawn: now,
+            last_bubble_spawn: now,
         }
     }
 }
@@ -105,6 +109,9 @@ impl App {
 
         // Spawn new fish periodically
         self.maybe_spawn_fish(screen_bounds);
+
+        // Spawn bubbles from random fish
+        self.maybe_spawn_bubbles();
     }
 
     /// Set running to false to quit the application.
@@ -142,6 +149,43 @@ impl App {
             let fish = Fish::new_random(fish_id, screen_bounds);
             self.entity_manager.add_entity(Box::new(fish));
             self.last_fish_spawn = now;
+        }
+    }
+
+    /// Maybe spawn bubbles from random fish
+    fn maybe_spawn_bubbles(&mut self) {
+        let now = Instant::now();
+
+        // Only spawn bubbles every 2-4 seconds
+        if now.duration_since(self.last_bubble_spawn) < Duration::from_millis(2000) {
+            return;
+        }
+
+        let fish_entities = self.entity_manager.get_entities_by_type("fish");
+        if fish_entities.is_empty() {
+            return;
+        }
+
+        // Random chance to spawn a bubble (about 30% chance when timer allows)
+        let mut rng = rand::thread_rng();
+        if rng.gen_bool(0.3) {
+            // Pick a random fish to emit a bubble
+            let fish_index = rng.gen_range(0..fish_entities.len());
+            let fish = fish_entities[fish_index];
+
+            // Create bubble at fish position
+            let fish_pos = fish.position();
+            let sprite = fish.get_current_sprite();
+            let (width, _) = sprite.get_bounding_box();
+
+            // Determine fish direction based on velocity or position heuristic
+            let fish_moving_right = fish_pos.x < 40.0; // Simple heuristic based on screen position
+
+            let bubble_id = self.entity_manager.get_next_id();
+            let bubble = Bubble::from_fish_position(bubble_id, fish_pos, width, fish_moving_right);
+            self.entity_manager.add_entity(Box::new(bubble));
+
+            self.last_bubble_spawn = now;
         }
     }
 

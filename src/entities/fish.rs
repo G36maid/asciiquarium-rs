@@ -268,6 +268,25 @@ impl Fish {
         }
     }
 
+    /// Get the position where a bubble should be emitted from this fish
+    pub fn get_bubble_position(&self) -> Position {
+        let sprite = self.get_current_sprite();
+        let (width, height) = sprite.get_bounding_box();
+
+        // Position bubble at fish's mouth/front
+        let bubble_x = match self.direction {
+            Direction::Right => self.position.x + width as f32, // Right side of fish
+            Direction::Left => self.position.x,                 // Left side of fish
+        };
+
+        let bubble_y = self.position.y + (height as f32 / 2.0); // Middle of fish vertically
+
+        // Bubble appears one depth layer above the fish (lower depth number = more foreground)
+        let bubble_depth = self.position.depth.saturating_sub(1);
+
+        Position::new(bubble_x, bubble_y, bubble_depth)
+    }
+
     /// Update fish direction based on velocity
     fn update_direction(&mut self) {
         if self.velocity.dx > 0.0 {

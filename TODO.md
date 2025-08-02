@@ -2,26 +2,27 @@
 
 This document outlines the implementation roadmap for asciiquarium-rs, a Rust port of the classic ASCII aquarium animation.
 
-## Phase 1: Core Framework ✅ (In Progress)
+## Phase 1: Core Framework ✅ (COMPLETED)
 
 ### Basic Infrastructure
 - [x] Set up Rust project with Ratatui
 - [x] Basic app structure with event handling
-- [ ] Entity system foundation
-  - [ ] Define Entity trait
-  - [ ] Position and movement components
-  - [ ] Animation frame system
-  - [ ] Entity manager/registry
-- [ ] Rendering pipeline
-  - [ ] Depth-based rendering
-  - [ ] Color support
-  - [ ] ASCII art rendering utilities
-- [ ] Input handling
-  - [ ] Keyboard controls (q, r, p)
-  - [ ] Signal handling for graceful exit
-- [ ] Screen management
-  - [ ] Dynamic resize handling
-  - [ ] Coordinate system setup
+- [x] Entity system foundation
+  - [x] Define Entity trait
+  - [x] Position and movement components
+  - [x] Animation frame system
+  - [x] Entity manager/registry
+- [x] Rendering pipeline
+  - [x] Depth-based rendering
+  - [x] Color support (basic implementation)
+  - [x] ASCII art rendering utilities
+  - [x] Transparency system with character-level transparency
+- [x] Input handling
+  - [x] Keyboard controls (q, r, p)
+  - [x] Signal handling for graceful exit
+- [x] Screen management
+  - [x] Dynamic resize handling
+  - [x] Coordinate system setup
 
 ## Phase 2: Environment System
 
@@ -50,45 +51,45 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
 - [ ] Random positioning across screen bottom
 - [ ] Animation timing (0.25-0.30 fps)
 
-## Phase 3: Fish System
+## Phase 3: Fish System ✅ (PARTIALLY COMPLETED)
 
 ### Basic Fish
-- [ ] Fish entity structure
-  - [ ] Position, velocity, direction
-  - [ ] Species variants
-  - [ ] Age tracking
-- [ ] Fish ASCII art assets
-  - [ ] Classic fish designs (old generation)
-  - [ ] New fish designs (enhanced generation)
-  - [ ] Left/right directional sprites
-  - [ ] Color mask definitions
+- [x] Fish entity structure
+  - [x] Position, velocity, direction
+  - [x] Species variants (4 basic species implemented)
+  - [x] Age tracking
+- [x] Fish ASCII art assets
+  - [x] Classic fish designs (2 species from original)
+  - [ ] New fish designs (enhanced generation) - **TODO**: Add remaining species
+  - [x] Left/right directional sprites (FIXED: proper direction mapping)
+  - [x] Color mask definitions - **ISSUE**: Colors don't match original exactly
 
 ### Fish Behavior
-- [ ] Movement system
-  - [ ] Horizontal swimming
-  - [ ] Slight vertical drift
-  - [ ] Speed variations by species
-- [ ] Population management
-  - [ ] Screen-size based spawning (area/350)
-  - [ ] Continuous respawning
-  - [ ] Off-screen death detection
-- [ ] Fish AI
-  - [ ] Random direction changes
-  - [ ] Boundary avoidance
-  - [ ] Depth layer distribution
+- [x] Movement system
+  - [x] Horizontal swimming
+  - [x] Slight vertical drift
+  - [x] Speed variations by species
+- [x] Population management
+  - [x] Screen-size based spawning (area/350)
+  - [x] Continuous respawning
+  - [x] Off-screen death detection
+- [x] Fish AI
+  - [x] Random direction changes (basic implementation)
+  - [x] Boundary avoidance (off-screen death)
+  - [x] Depth layer distribution
 
-### Bubble System
-- [ ] Bubble entity implementation
-  - [ ] 5-frame animation (., o, O, O, O)
-  - [ ] Vertical movement (rising)
-  - [ ] Cyan coloring
-- [ ] Bubble generation
-  - [ ] Random emission from fish
-  - [ ] Position calculation based on fish direction
-  - [ ] Timer-based spawning
-- [ ] Bubble physics
-  - [ ] Surface collision (popping)
-  - [ ] Buoyancy simulation
+### Bubble System ✅ (COMPLETED)
+- [x] Bubble entity implementation
+  - [x] 5-frame animation (., o, O, O, O)
+  - [x] Vertical movement (rising)
+  - [x] Cyan coloring
+- [x] Bubble generation
+  - [x] Random emission from fish
+  - [x] Position calculation based on fish direction
+  - [x] Timer-based spawning
+- [x] Bubble physics
+  - [x] Surface collision (popping)
+  - [x] Buoyancy simulation with upward acceleration
 
 ## Phase 4: Predators and Large Entities
 
@@ -236,9 +237,24 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
 
 ## Current Status
 
-**Active Phase**: Phase 1 - Core Framework
-**Next Milestone**: Complete entity system foundation
-**Estimated Completion**: TBD
+**Active Phase**: Phase 2 - Environment System (Water surface animation next)
+**Next Milestone**: Implement animated water surface and seaweed
+**Recent Completion**: Bubble system with fish emission and surface collision
+
+### Recent Fixes
+- ✅ Fixed fish direction mapping (sprites now face correct direction)
+- ✅ Fixed fish positioning (alternating left/right starts)
+- ✅ Fixed entity ID assignment for proper direction alternation
+- ✅ Implemented basic transparency system
+- ✅ Added depth-based rendering
+- ✅ Implemented bubble system with 5-frame animation
+- ✅ Added fish-to-bubble spawning with direction awareness
+- ✅ Bubble physics with surface collision detection
+
+### Known Issues to Address
+- 🔧 **Color Issue**: Fish colors don't exactly match original code masks
+- 🔧 **Missing Species**: Need to add more fish species from original
+- 🔧 **Performance**: May need optimization for larger screens
 
 ---
 
@@ -249,3 +265,10 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
 - Focus on performance and smooth animation
 - Ensure graceful handling of various terminal sizes
 - Preserve the meditative, relaxing nature of the original
+
+### Priority Next Steps
+1. **Water Surface Animation** - Implement animated tileable water waves at top
+2. **Fix Color Mapping** - Make fish colors match original color mask system
+3. **Add Seaweed System** - Swaying seaweed plants at bottom
+4. **Add More Fish Species** - Port remaining fish designs from original
+5. **Castle Background** - Add the castle decoration at bottom-right
