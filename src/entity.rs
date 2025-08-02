@@ -76,7 +76,7 @@ impl Sprite {
         chars[col]
     }
 
-    /// Get the color for a character based on color mask
+    /// Get the color for a character based on color mask with randomization
     pub fn get_color_at(&self, col: usize, row: usize) -> Option<Color> {
         let color_mask = self.color_mask.as_ref()?;
 
@@ -91,23 +91,77 @@ impl Sprite {
             return None;
         }
 
-        // Convert color mask character to color
+        // Convert color mask character to color following original Perl implementation
         match mask_chars[col] {
-            'R' | 'r' => Some(Color::Red),
-            'G' | 'g' => Some(Color::Green),
-            'B' | 'b' => Some(Color::Blue),
-            'Y' | 'y' => Some(Color::Yellow),
-            'M' | 'm' => Some(Color::Magenta),
-            'C' | 'c' => Some(Color::Cyan),
-            'W' | 'w' => Some(Color::White),
-            '1' => Some(Color::Red),
-            '2' => Some(Color::Green),
-            '3' => Some(Color::Yellow),
-            '4' => Some(Color::Blue),
-            '5' => Some(Color::Magenta),
-            '6' => Some(Color::Cyan),
-            '7' => Some(Color::White),
+            // Direct color codes (castle uses these)
+            'R' => Some(Color::Red),
+            'r' => Some(Color::Red),
+            'G' => Some(Color::Green),
+            'g' => Some(Color::Green),
+            'B' => Some(Color::Blue),
+            'b' => Some(Color::Blue),
+            'Y' => Some(Color::Yellow),
+            'y' => Some(Color::Yellow),
+            'M' => Some(Color::Magenta),
+            'm' => Some(Color::Magenta),
+            'C' => Some(Color::Cyan),
+            'c' => Some(Color::Cyan),
+            'W' => Some(Color::White),
+            'w' => Some(Color::White),
+
+            // Randomized color codes from Perl rand_color function
+            // These are the result of converting numbers 1-9 to random colors
+            // Original Perl colors: ('c','C','r','R','y','Y','b','B','g','G','m','M')
+            '1' => Some(Color::Red),     // Fallback for unrandomized masks
+            '2' => Some(Color::Green),   // Fallback for unrandomized masks
+            '3' => Some(Color::Yellow),  // Fallback for unrandomized masks
+            '4' => Some(Color::Blue),    // Fallback for unrandomized masks
+            '5' => Some(Color::Magenta), // Fallback for unrandomized masks
+            '6' => Some(Color::Cyan),    // Fallback for unrandomized masks
+            '7' => Some(Color::White),   // Fallback for unrandomized masks
+            '8' => Some(Color::Red),     // Fallback for unrandomized masks
+            '9' => Some(Color::Green),   // Fallback for unrandomized masks
             _ => None,
+        }
+    }
+
+    /// Create a sprite with randomized colors (matching original Perl rand_color function)
+    pub fn from_ascii_art_with_random_colors(art: &str, mask: Option<&str>) -> Self {
+        use rand::Rng;
+
+        let lines: Vec<String> = art.lines().map(|s| s.to_string()).collect();
+
+        let color_mask = if let Some(m) = mask {
+            let mut rng = rand::thread_rng();
+
+            // Original Perl colors: ('c','C','r','R','y','Y','b','B','g','G','m','M')
+            let colors = ['c', 'C', 'r', 'R', 'y', 'Y', 'b', 'B', 'g', 'G', 'm', 'M'];
+
+            // Create a mapping for each number 1-9 to a random color
+            let mut color_map = std::collections::HashMap::new();
+            for i in 1..=9 {
+                let random_color = colors[rng.gen_range(0..colors.len())];
+                color_map.insert(char::from_digit(i, 10).unwrap(), random_color);
+            }
+
+            // Apply the color mapping to the mask
+            let randomized_mask: String = m
+                .chars()
+                .map(|ch| color_map.get(&ch).copied().unwrap_or(ch))
+                .collect();
+
+            Some(randomized_mask.lines().map(|s| s.to_string()).collect())
+        } else {
+            None
+        };
+
+        // Use the global transparency characters
+        let transparent_chars = TRANSPARENCY_CHARS.iter().cloned().collect();
+
+        Self {
+            lines,
+            color_mask,
+            transparent_chars,
         }
     }
 
@@ -430,5 +484,57 @@ impl EntityManager {
 impl Default for EntityManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_color_randomization() {
+        let art = "123\n456\n789";
+        let mask = "123\n456\n789";
+
+        let sprite = Sprite::from_ascii_art_with_random_colors(art, Some(mask));
+
+        // Check that the sprite was created
+        assert_eq!(sprite.lines.len(), 3);
+        assert!(sprite.color_mask.is_some());
+
+        let color_mask = sprite.color_mask.unwrap();
+        assert_eq!(color_mask.len(), 3);
+
+        // Check that numbers were replaced with color characters
+        let all_mask_chars: String = color_mask.join("");
+        let valid_colors = ['c', 'C', 'r', 'R', 'y', 'Y', 'b', 'B', 'g', 'G', 'm', 'M'];
+
+        for ch in all_mask_chars.chars() {
+            if ch.is_numeric() {
+                panic!("Number {} was not replaced with a color character", ch);
+            }
+            if ch != '\n' && ch != ' ' {
+                assert!(
+                    valid_colors.contains(&ch),
+                    "Invalid color character: {}",
+                    ch
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_sprite_color_mapping() {
+        let sprite = Sprite::from_ascii_art("X", Some("r"));
+        let color = sprite.get_color_at(0, 0);
+        assert_eq!(color, Some(Color::Red));
+
+        let sprite = Sprite::from_ascii_art("X", Some("C"));
+        let color = sprite.get_color_at(0, 0);
+        assert_eq!(color, Some(Color::Cyan));
+
+        let sprite = Sprite::from_ascii_art("X", Some("1"));
+        let color = sprite.get_color_at(0, 0);
+        assert_eq!(color, Some(Color::Red)); // Fallback mapping
     }
 }

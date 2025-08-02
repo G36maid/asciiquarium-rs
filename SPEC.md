@@ -219,6 +219,10 @@ struct AnimationFrame {
 - **Seaweed Spawning**: Current implementation spawns seaweed every 5 seconds when below target count, but this frequency differs from the original Perl version. Needs investigation and calibration against original spawning behavior.
 - **Future Calibration**: All spawning timings should be verified against the original asciiquarium behavior for authenticity.
 
+### Color System Status
+- **Fish Colors**: ✅ **FIXED** - Color randomization now matches original Perl `rand_color` function with proper number-to-color mapping
+- **Color Masks**: ✅ **FIXED** - Fish now use randomized color masks identical to original implementation
+
 ## Data Assets
 
 All ASCII art and color masks from the original Perl implementation will be preserved, including:

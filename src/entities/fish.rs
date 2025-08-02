@@ -11,6 +11,8 @@ pub enum FishSpecies {
     Small2,
     Medium1,
     Medium2,
+    Large1,
+    Large2,
     // Add more species as we implement them
 }
 
@@ -22,6 +24,8 @@ impl FishSpecies {
             FishSpecies::Small2,
             FishSpecies::Medium1,
             FishSpecies::Medium2,
+            FishSpecies::Large1,
+            FishSpecies::Large2,
         ]
     }
 
@@ -59,8 +63,8 @@ impl FishSpecies {
   3"#;
 
                 (
-                    Sprite::from_ascii_art(right_art, Some(right_mask)),
-                    Sprite::from_ascii_art(left_art, Some(left_mask)),
+                    Sprite::from_ascii_art_with_random_colors(right_art, Some(right_mask)),
+                    Sprite::from_ascii_art_with_random_colors(left_art, Some(left_mask)),
                 )
             }
             FishSpecies::Small2 => {
@@ -95,23 +99,91 @@ impl FishSpecies {
     3"#;
 
                 (
-                    Sprite::from_ascii_art(right_art, Some(right_mask)),
-                    Sprite::from_ascii_art(left_art, Some(left_mask)),
+                    Sprite::from_ascii_art_with_random_colors(right_art, Some(right_mask)),
+                    Sprite::from_ascii_art_with_random_colors(left_art, Some(left_mask)),
                 )
             }
             FishSpecies::Medium1 => {
-                // Placeholder - will add more detailed fish later
-                let right_art = "><(((*>";
-                let left_art = "<*)))><";
+                let right_art = r#"            \\'`.
+             )  \
+(`.??????_.-`' ' '`-.
+ \ `.??.`        (o) \_
+  >  ><     (((       (
+ / .`??`._      /_|  /'
+(.`???????`-. _  _.-`
+            /__/'"#;
+                let right_mask = r#"            1111
+             1  1
+111      11111 1 1111
+ 1 11  11        141 11
+  1  11     777       5
+ 1 11  111      333  11
+111       111 1  1111
+            11111"#;
+
+                let left_art = r#"       .'`/
+      /  (
+  .-'` ` `'-._??????.')
+_/ (o)        '.??.' /
+)       )))     ><  <
+`\  |_\      _.'??'. \
+  '-._  _ .-'???????'.)
+      `\__\"#;
+                let left_mask = r#"       1111
+      1  1
+  1111 1 11111      111
+11 141        11  11 1
+5       777     11  1
+11  333      111  11 1
+  1111  1 111       111
+      11111"#;
+
+                (
+                    Sprite::from_ascii_art_with_random_colors(right_art, Some(right_mask)),
+                    Sprite::from_ascii_art_with_random_colors(left_art, Some(left_mask)),
+                )
+            }
+            FishSpecies::Medium2 => {
+                let right_art = r#"       ,--,_
+__    _\.---'-.
+\ '.-"     // o\
+/_.'-._    \\  /
+       `"--(/"`"#;
+                let right_mask = r#"       22222
+66    121111211
+6 6111     77 41
+6661111    77  1
+       11113311"#;
+
+                let left_art = r#"    _,--,
+ .-'---./_    __
+/o \\     "-.' /
+\  //    _.-'._\
+ `"\)--"`"#;
+                let left_mask = r#"    22222
+ 112111121    66
+14 77     1116 6
+1  77    1111666
+ 11331111"#;
+
+                (
+                    Sprite::from_ascii_art_with_random_colors(right_art, Some(right_mask)),
+                    Sprite::from_ascii_art_with_random_colors(left_art, Some(left_mask)),
+                )
+            }
+            FishSpecies::Large1 => {
+                // Placeholder for big fish - will implement later
+                let right_art = "><(((((*>";
+                let left_art = "<*))))))><";
                 (
                     Sprite::from_ascii_art(right_art, None),
                     Sprite::from_ascii_art(left_art, None),
                 )
             }
-            FishSpecies::Medium2 => {
-                // Placeholder - will add more detailed fish later
-                let right_art = "><(((o>";
-                let left_art = "<o)))><";
+            FishSpecies::Large2 => {
+                // Placeholder for big fish - will implement later
+                let right_art = "><(((((o>";
+                let left_art = "<o))))))><";
                 (
                     Sprite::from_ascii_art(right_art, None),
                     Sprite::from_ascii_art(left_art, None),
@@ -127,6 +199,8 @@ impl FishSpecies {
             FishSpecies::Small2 => Color::Cyan,
             FishSpecies::Medium1 => Color::Green,
             FishSpecies::Medium2 => Color::Magenta,
+            FishSpecies::Large1 => Color::Blue,
+            FishSpecies::Large2 => Color::Red,
         }
     }
 }

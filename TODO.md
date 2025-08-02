@@ -67,10 +67,10 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
   - [x] Species variants (4 basic species implemented)
   - [x] Age tracking
 - [x] Fish ASCII art assets
-  - [x] Classic fish designs (2 species from original)
-  - [ ] New fish designs (enhanced generation) - **TODO**: Add remaining species
+  - [x] Classic fish designs (4 species from original: Small1, Small2, Medium1, Medium2)
+  - [x] Enhanced fish designs with detailed ASCII art
   - [x] Left/right directional sprites (FIXED: proper direction mapping)
-  - [x] Color mask definitions - **ISSUE**: Colors don't match original exactly
+  - [x] Color mask definitions with proper randomization (FIXED: Now matches original exactly)
 
 ### Fish Behavior
 - [x] Movement system
@@ -270,12 +270,14 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
 - ✅ **Animated Water Surface** - 4-layer wave animation with proper depth sorting and screen adaptation
 - ✅ **Seaweed System** - Implemented swaying seaweed with 2-frame animation, population management, and proper lifecycle
 - ✅ **Castle Background** - Static castle decoration with red/yellow color highlights, proper positioning, and screen resize handling
+- ✅ **Color Mapping System** - Implemented proper color randomization matching original Perl rand_color function
+- ✅ **Additional Fish Species** - Added Medium1 and Medium2 fish with original ASCII art and color masks
 
 ### Known Issues to Address
-- 🔧 **Color Issue**: Fish colors don't exactly match original code masks
-- 🔧 **Missing Species**: Need to add more fish species from original
 - 🔧 **Performance**: May need optimization for larger screens
 - 🔧 **Debug Output**: Remove debug print statements from fish off-screen detection
+- 🔧 **Big Fish**: Large1 and Large2 species still use placeholder sprites
+- 🔧 **Old Fish**: Need to add classic "old fish" variants from original
 
 ---
 
@@ -288,8 +290,8 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
 - Preserve the meditative, relaxing nature of the original
 
 ### Priority Next Steps
-1. **Fix Color Mapping** - Make fish colors match original color mask system exactly
-2. **Add More Fish Species** - Port remaining fish designs from original
-3. **Large Creatures** - Begin Phase 4 with sharks and whales
-4. **Performance Optimization** - Optimize for larger screens and many entities
-5. **Advanced Features** - Collision system and random object spawning
+1. **Large Creatures** - Begin Phase 4 with sharks and whales
+2. **Performance Optimization** - Optimize for larger screens and many entities
+3. **Advanced Features** - Collision system and random object spawning
+4. **Complete Fish Species** - Add remaining big fish and old fish variants
+5. **Classic Mode** - Implement -c flag for original fish only
