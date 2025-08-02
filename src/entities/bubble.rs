@@ -164,6 +164,7 @@ impl Entity for Bubble {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::depth;
 
     #[test]
     fn test_bubble_creation() {

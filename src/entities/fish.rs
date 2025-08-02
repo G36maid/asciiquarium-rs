@@ -387,6 +387,7 @@ impl Entity for Fish {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::depth;
 
     #[test]
     fn test_fish_creation() {
@@ -412,7 +413,7 @@ mod tests {
     fn test_fish_movement() {
         let mut fish = Fish::new(
             1,
-            Position::new(10.0, 10.0, depth::FISH_START),
+            Position::new(10.0, 10.0, depth::depth::FISH_START),
             Velocity::new(1.0, 0.0),
             Direction::Right,
             FishSpecies::Small1,

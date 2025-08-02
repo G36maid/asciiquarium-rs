@@ -5,7 +5,7 @@ This document outlines the conventions and commands for agentic coding in this r
 ## Build, Lint, and Test Commands
 
 *   **Build:** `cargo build`
-*   **Run:** `cargo run`
+*   **Run:** `cargo run` (do not use `cargo run` for testing, ask me to run the visual check)
 *   **Lint:** `cargo clippy`
 *   **Format:** `cargo fmt` (to fix formatting) or `cargo fmt -- --check` (to check formatting)
 *   **Test All:** `cargo test --all-features --all-targets`

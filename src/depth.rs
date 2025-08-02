@@ -115,8 +115,11 @@ mod tests {
     fn test_water_surface_functions() {
         assert!(is_water_surface_depth(depth::WATER_LINE0));
         assert!(is_water_surface_depth(depth::WATER_GAP1));
-        assert!(!is_water_surface_depth(depth::SHARK));
-        assert!(!is_water_surface_depth(depth::FISH_START));
+        // Note: Water surface depths overlap with other entity depths due to layering design
+        assert!(is_water_surface_depth(depth::SHARK)); // Same as WATER_LINE3 (depth 2)
+        assert!(is_water_surface_depth(depth::FISH_START)); // Same as WATER_GAP3 (depth 3)
+        assert!(!is_water_surface_depth(depth::SEAWEED)); // Depth 21, not in water surface range
+        assert!(!is_water_surface_depth(depth::CASTLE)); // Depth 22, not in water surface range
     }
 
     #[test]

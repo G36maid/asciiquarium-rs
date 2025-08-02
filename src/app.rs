@@ -1,4 +1,4 @@
-use crate::entities::{Bubble, Fish, WaterSurfaceManager};
+use crate::entities::{Bubble, Fish, Seaweed, SeaweedManager, WaterSurfaceManager};
 use crate::entity::EntityManager;
 use crate::event::{AppEvent, Event, EventHandler};
 use rand::Rng;
@@ -32,6 +32,8 @@ pub struct App {
     pub water_surface_manager: WaterSurfaceManager,
     /// Whether water surface has been initialized
     pub water_initialized: bool,
+    /// Seaweed manager
+    pub seaweed_manager: SeaweedManager,
 }
 
 impl Default for App {
@@ -48,6 +50,7 @@ impl Default for App {
             screen_bounds: Rect::new(0, 0, 80, 24), // Default size
             water_surface_manager: WaterSurfaceManager::new(),
             water_initialized: false,
+            seaweed_manager: SeaweedManager::new(),
         }
     }
 }
@@ -130,6 +133,9 @@ impl App {
 
         // Spawn bubbles from random fish
         self.maybe_spawn_bubbles();
+
+        // Manage seaweed population
+        self.maybe_spawn_seaweed(screen_bounds);
     }
 
     /// Set running to false to quit the application.
@@ -147,6 +153,7 @@ impl App {
         self.entity_manager = EntityManager::new();
         self.last_fish_spawn = Instant::now();
         self.water_initialized = false; // Force water surface recreation
+        self.seaweed_manager = SeaweedManager::new(); // Reset seaweed manager
     }
 
     /// Maybe spawn a new fish based on population and timing
@@ -205,6 +212,23 @@ impl App {
             self.entity_manager.add_entity(Box::new(bubble));
 
             self.last_bubble_spawn = now;
+        }
+    }
+
+    /// Maybe spawn seaweed based on population and timing
+    fn maybe_spawn_seaweed(&mut self, screen_bounds: Rect) {
+        // Update target count based on screen size
+        self.seaweed_manager.update_target_count(screen_bounds);
+
+        let current_seaweed_count = self.entity_manager.get_entities_by_type("seaweed").len();
+
+        if self
+            .seaweed_manager
+            .should_spawn_seaweed(current_seaweed_count)
+        {
+            let seaweed_id = self.entity_manager.get_next_id();
+            let seaweed = Seaweed::new_random(seaweed_id, screen_bounds);
+            self.entity_manager.add_entity(Box::new(seaweed));
         }
     }
 

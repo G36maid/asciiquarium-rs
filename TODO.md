@@ -44,14 +44,17 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
 - [ ] Depth layer management
 - [ ] Static entity system
 
-### Seaweed System - **NEXT UP**
-- [ ] Seaweed entity implementation
-  - [ ] Random height generation (3-7 chars)
-  - [ ] 2-frame swaying animation
-  - [ ] Green coloring
-- [ ] Lifecycle management (8-12 minute lifespan)
-- [ ] Random positioning across screen bottom
-- [ ] Animation timing (0.25-0.30 fps)
+### Seaweed System ✅ (COMPLETED)
+- [x] Seaweed entity implementation
+  - [x] Random height generation (3-7 chars)
+  - [x] 2-frame swaying animation
+  - [x] Green coloring
+- [x] Lifecycle management (8-12 minute lifespan)
+- [x] Random positioning across screen bottom
+- [x] Animation timing (0.25-0.30 fps)
+- [x] SeaweedManager for population control
+- [x] Screen-size based target count (width/15)
+- [x] Integration with main app loop
 
 ## Phase 3: Fish System ✅ (PARTIALLY COMPLETED)
 
@@ -239,8 +242,8 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
 
 ## Current Status
 
-**Active Phase**: Phase 2 - Environment System (Seaweed and Castle next)
-**Next Milestone**: Implement swaying seaweed and castle background
+**Active Phase**: Phase 2 - Environment System (Castle next)
+**Next Milestone**: Implement castle background decoration
 **Recent Completion**: Animated 4-layer water surface system
 
 ### Testing Status
@@ -262,6 +265,7 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
 - ✅ **FIXED: Fish lifecycle** - Fish now spawn completely off-screen and die when leaving
 - ✅ **FIXED: Screen bounds** - App now uses actual terminal size instead of hardcoded 80x24
 - ✅ **Animated Water Surface** - 4-layer wave animation with proper depth sorting and screen adaptation
+- ✅ **Seaweed System** - Implemented swaying seaweed with 2-frame animation, population management, and proper lifecycle
 
 ### Known Issues to Address
 - 🔧 **Color Issue**: Fish colors don't exactly match original code masks
@@ -280,8 +284,8 @@ This document outlines the implementation roadmap for asciiquarium-rs, a Rust po
 - Preserve the meditative, relaxing nature of the original
 
 ### Priority Next Steps
-1. **Seaweed System** - Implement swaying seaweed plants at bottom with 2-frame animation
-2. **Castle Background** - Add the castle decoration at bottom-right with proper colors
-3. **Fix Color Mapping** - Make fish colors match original color mask system exactly
-4. **Add More Fish Species** - Port remaining fish designs from original
-5. **Large Creatures** - Begin Phase 4 with sharks and whales
+1. **Castle Background** - Add the castle decoration at bottom-right with proper colors
+2. **Fix Color Mapping** - Make fish colors match original color mask system exactly
+3. **Add More Fish Species** - Port remaining fish designs from original
+4. **Large Creatures** - Begin Phase 4 with sharks and whales
+5. **Performance Optimization** - Optimize for larger screens and many entities
