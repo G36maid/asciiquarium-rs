@@ -2,242 +2,264 @@
 
 ## Overview
 
-Asciiquarium-rs is a Rust implementation of the classic ASCII art aquarium animation. This specification is based on analysis of the original Perl asciiquarium v1.1 by Kirk Baucom and defines the requirements for a faithful Rust port using Ratatui.
+Asciiquarium-rs is a faithful Rust implementation of the classic ASCII art aquarium animation. This specification is based on detailed analysis of the original Perl asciiquarium v1.1 by Kirk Baucom and defines the requirements for an exact behavioral match using Ratatui.
 
-## Core Architecture
+## Critical Behavioral Analysis
 
-### Entity System
-The application uses an entity-component system where all animated objects are entities with the following properties:
+### Death Callback System (Core Architecture)
 
-- **Position**: 3D coordinates (x, y, depth)
-- **Shape**: ASCII art representation (single frame or animation sequence)
-- **Color**: Color masks for different parts of the entity
-- **Movement**: Velocity and animation callbacks
-- **Lifecycle**: Spawn time, death conditions, respawn behavior
-- **Physics**: Collision detection and response
-- **Depth**: Z-order for proper layering
+The original asciiquarium uses a **death callback chain system** rather than independent timers:
+
+1. **Initialization Phase**: 
+   - All environment elements are created once
+   - Fish population calculated and spawned based on screen size
+   - Seaweed population calculated and spawned based on screen width  
+   - **Exactly one** random large creature is spawned initially
+   
+2. **Runtime Phase**:
+   - Animation loop only animates existing entities
+   - **No active spawning** during runtime
+   - All new entities are spawned via death callbacks
+
+3. **Death Callback Chain**:
+   ```
+   Large Creature Dies → random_object() → New Random Large Creature
+   Fish Dies → add_fish() → New Fish (maintains population)
+   Seaweed Dies → add_seaweed() → New Seaweed (maintains population)
+   Shark Dies → shark_death() → Clean up teeth → random_object()
+   ```
+
+**Key Insight**: There is always exactly one large creature on screen at any time, never multiple simultaneously.
+
+### Original Spawning Formulas
+
+#### Fish Population
+```perl
+my $screen_size = ($anim->height() - 9) * $anim->width();
+my $fish_count = int($screen_size / 350);
+```
+- Subtracts 9 lines for water surface area
+- One fish per 350 screen characters
+- All fish spawned at initialization
+- Population maintained via death callbacks
+
+#### Seaweed Population  
+```perl
+my $seaweed_count = int($anim->width() / 15);
+```
+- One seaweed plant per 15 columns of screen width
+- All seaweed spawned at initialization
+- Lives 8-12 minutes then respawns via death callback
+
+#### Random Objects (Large Creatures)
+```perl
+my @random_objects = (
+    \&add_ship,
+    \&add_whale, 
+    \&add_monster,
+    \&add_big_fish,
+    \&add_shark,
+);
+```
+- Random selection: `int(rand(scalar(@random_objects)))`
+- **One at a time**: Single large creature chain
+- Death triggers next random selection
+
+## Entity System Architecture
 
 ### Depth Layers (Z-order)
 ```
-0-1:   GUI elements (future use)
-2:     Sharks, water surface effects  
-3-20:  Fish (multiple layers for schooling)
-21:    Seaweed
-22:    Castle (background)
-2-9:   Water surface (multiple layers for wave effect)
+Depth   Purpose                 Original Perl Constant
+0-1     GUI elements           guiText=0, gui=1
+2       Sharks                 shark=2  
+2-9     Water surface layers   water_line3=2, water_gap3=3, 
+                               water_line2=4, water_gap2=5,
+                               water_line1=6, water_gap1=7, 
+                               water_line0=8, water_gap0=9
+3-20    Fish layers           fish_start=3, fish_end=20
+21      Seaweed               seaweed=21
+22      Castle                castle=22
 ```
 
-## Environment
+### Entity Lifecycle
 
-### Water Surface
-- 4-layer animated water surface using tileable segments
-- Segments: `~`, `^^^^ ^^^  ^^^   ^^^    ^^^^`, `^^^^      ^^^^     ^^^    ^^`, `^^      ^^^^      ^^^    ^^^^^^`
-- Cyan colored, repeats across screen width
-- Creates wave-like animation effect
+#### Fish
+- **Spawn**: At random screen edge based on direction
+- **Movement**: Horizontal only (`callback_args => [ $speed, 0, 0 ]`)
+- **Death**: Off-screen detection (`die_offscreen => 1`)
+- **Respawn**: Via death callback (`death_cb => \&add_fish`)
+- **Collision**: Physical entities with collision handlers
 
-### Castle
-- Static background element positioned at bottom-right
-- Multi-line ASCII art with red and yellow color highlights
-- Provides depth and visual interest to the scene
+#### Large Creatures
+- **Spawn**: Random selection from object array
+- **Movement**: Horizontal movement patterns
+- **Death**: Off-screen detection
+- **Respawn**: Via death callback to `random_object`
+- **Positioning**:
+  - Ships: Surface level (`water_gap1` depth)
+  - Whales: Surface level (`water_gap2` depth)  
+  - Monsters: Slightly submerged (`water_gap2` depth, y=2)
+  - Big Fish: Shark depth (`shark` depth)
 
-### Seaweed
-- Randomly placed vertical seaweed plants
-- 2-frame animation (swaying left/right): `(` and ` )`
-- Random height (3-7 characters)
-- Green colored
-- Lives 8-12 minutes before respawning
-- Animation speed: 0.25-0.30 fps
-- Spawning frequency: Every 5 seconds when below target (⚠️ **Known Issue**: Spawning rate differs from original Perl version)
+#### Seaweed
+- **Spawn**: Random x position, bottom anchored
+- **Lifespan**: 8-12 minutes (`die_time => time() + int(rand(4*60)) + (8*60)`)
+- **Animation**: 2-frame sway, speed 0.25-0.30 fps
+- **Respawn**: Via death callback (`death_cb => \&add_seaweed`)
 
-## Fish System
+## Animation System
 
-### Fish Types
+### Frame Rates and Timing
+- **Main Loop**: Controlled by `halfdelay(1)` (getch timeout)
+- **Entity Animation**: Individual callback timing
+- **Seaweed Sway**: 0.25-0.30 fps
+- **Whale Spouts**: 7-frame sequence with timing
+- **Fish Movement**: Smooth horizontal scrolling
 
-#### Classic Fish (Old Generation)
-Multiple species with left/right directional sprites:
-- Small fish with simple `><>` style designs
-- Medium fish with more detailed ASCII art
-- Each species has unique shape and color pattern
+### Color System
+- **Fish Colors**: Randomized using `rand_color()` function
+- **Color Masks**: Numeric codes (1-9) mapped to random colors per instance
+- **Fixed Colors**: 
+  - Seaweed: Green
+  - Water: Cyan
+  - Castle: Red/Yellow highlights
+  - Ships: Yellow masts, White hulls
 
-#### New Fish (Enhanced Generation)
-More detailed fish species with:
-- Complex multi-line ASCII art
-- Detailed color masks
-- Available only in non-classic mode
+## Movement and Physics
 
-### Fish Behavior
-- **Spawning**: Based on screen size (screen_area / 350 fish)
-- **Movement**: Horizontal swimming only (no vertical movement, matching original)
-- **Bubble Generation**: Random chance to emit bubbles while swimming
-- **Collision**: Fish die when touching sharks or other deadly entities
-- **Schooling**: Multiple depth layers create schooling illusion
-- **Lifecycle**: Continuous respawning to maintain population
+### Fish Movement
+```perl
+callback_args => [ $speed, 0, 0 ]  # dx, dy, rotation
+```
+- **Horizontal Only**: No vertical movement
+- **Speed**: Random per fish
+- **Direction**: Alternates based on fish ID
+- **No Schooling AI**: Depth layering creates schooling illusion
 
-### Fish Animation
-- Direction-based sprites (left-facing and right-facing)
-- Smooth horizontal movement across screen
-- Die when reaching screen edges (off-screen death)
+### Large Creature Movement
+- **Ships**: `callback_args => [ $speed, 0, 0 ]`
+- **Whales**: `callback_args => [ $speed, 0, 0, 1 ]` (with animation)
+- **Monsters**: `callback_args => [ $speed, 0, 0, .25 ]` (with animation)
+- **Speed Variation**: Different speeds per creature type
 
-## Bubbles
-
-### Bubble System
-- Generated by fish at random intervals
-- Start at fish position (adjusted for fish size and direction)
-- 5-frame animation sequence: `.`, `o`, `O`, `O`, `O`
-- Cyan colored
-- Vertical movement (rising)
-- Pop when reaching water surface
-- Physics-enabled for collision detection
-
-## Random Objects
-
-### Sharks
-- Large predatory entities with teeth
-- 2-directional sprites (left/right)
-- White/cyan colored with red teeth
-- Move horizontally across screen
-- Separate teeth entity for collision detection
-- Deadly to fish on contact
-
-### Whales
-- Large entities with animated water spouts
-- 2-directional sprites
-- Blue/cyan colored
-- 7-frame water spout animation sequence
-- Spouts appear above whale periodically
-
-### Ships
-- Surface-level entities
-- Move horizontally across water surface
-- Detailed ASCII art representation
-
-### Sea Monsters
-- Large underwater entities
-- Two variants with different designs
-- Move horizontally with tentacle-like appendages
-
-### Big Fish
-- Larger fish variants
-- Two different species
-- More detailed ASCII art than regular fish
+### Collision System
+- **Shark Teeth**: Separate collision entity
+- **Fish Collision**: `physical => 1, coll_handler => \&fish_collision`
+- **Deadly Entities**: Sharks cause fish death
+- **Bubble Physics**: Rise to surface, pop on contact
 
 ## User Interface
 
 ### Controls
 - `q`: Quit application
-- `r`: Redraw/restart (recreates all entities)
-- `p`: Toggle pause/unpause
+- `r`: Redraw (restart initialization)
+- `p`: Toggle pause
 - `Ctrl+C`: Emergency exit
 
 ### Command Line Options
-- `-c`: Classic mode (only show original fish species)
+- `-c`: Classic mode (disables new fish and monsters)
 
-### Display
-- Full terminal screen utilization
-- Color support (8 basic colors)
-- Smooth animation at ~10 FPS
-- Dynamic screen size adaptation
+### Screen Management
+- Dynamic terminal size detection
+- Full screen utilization
+- Water surface adjusted to screen width
+- Entity populations scale with screen size
 
-## Technical Requirements
+## Implementation Requirements
 
-### Performance
-- Handle 20+ concurrent animated entities
-- Maintain smooth animation on typical terminal sizes
-- Efficient collision detection system
-- Memory management for entity lifecycle
-
-### Rendering
-- Terminal-based rendering using Ratatui
-- Color support with fallback for monochrome terminals
-- Proper depth sorting for overlapping entities
-- Screen size adaptation and reflow
-
-### Animation System
-- Frame-based animation with configurable timing
-- Entity movement with velocity and acceleration
-- Callback system for complex behaviors
-- Time-based lifecycle management
-
-## Entity Specifications
-
-### Fish Entity Properties
+### Death Callback System
 ```rust
-struct Fish {
-    position: (f32, f32, u8),     // x, y, depth
-    velocity: (f32, f32),         // dx, dy per frame
-    species: FishSpecies,         // determines appearance
-    direction: Direction,         // Left or Right
-    bubble_timer: f32,           // time until next bubble
-    age: Duration,               // time alive
+trait Entity {
+    fn on_death(&self, entity_manager: &mut EntityManager);
+}
+
+enum DeathCallback {
+    SpawnFish,
+    SpawnSeaweed, 
+    SpawnRandomObject,
+    SharkDeath, // Special: cleanup teeth + spawn random
 }
 ```
 
-### Animation Frame System
+### Random Object Manager
 ```rust
-struct AnimationFrame {
-    shape: Vec<String>,          // ASCII art lines
-    color_mask: Vec<String>,     // Color coding per character
-    duration: Duration,          // frame display time
+struct RandomObjectManager {
+    creators: Vec<fn(EntityId, Rect) -> Box<dyn Entity>>,
+    current_large_creature: Option<EntityId>,
 }
 ```
 
-### Collision System
-- Bounding box collision detection
-- Entity type-based collision rules
-- Collision callbacks for custom behavior
-- Separate collision entities (e.g., shark teeth)
+### Initialization Sequence
+1. Create water surface layers
+2. Create castle
+3. Calculate and spawn seaweed population
+4. Calculate and spawn fish population  
+5. Spawn exactly one random large creature
+6. Enter animation loop (no active spawning)
 
-## Implementation Phases
+## Known Behavioral Differences
 
-### Phase 1: Core Framework
-- Entity system foundation
-- Basic rendering pipeline
-- Input handling
-- Screen management
+### Current Implementation Issues
+- ❌ **Multiple Large Creatures**: Our system spawns multiple simultaneously
+- ❌ **Independent Timers**: Using timers instead of death callbacks
+- ❌ **Continuous Spawning**: Active spawning during runtime vs. callback-only
+- ❌ **Population Management**: Re-calculating instead of death-callback maintenance
 
-### Phase 2: Environment
-- Water surface animation
-- Castle background
-- Seaweed system
-- Basic fish
+### Required Fixes
+1. **Implement Death Callback System**: Replace timer-based spawning
+2. **Single Large Creature**: Ensure only one at a time
+3. **Initialization vs. Runtime**: Separate spawn logic phases  
+4. **Population Formulas**: Use exact original calculations
+5. **Seaweed Lifecycle**: 8-12 minute lifespan with death callbacks
 
-### Phase 3: Advanced Entities
-- Bubble system
-- Sharks and predation
-- Whales with spouts
-- Random object spawning
+## Original Animation Sequences
 
-### Phase 4: Polish
-- Collision refinement
-- Performance optimization
-- Classic mode implementation
-- Additional fish species
+### Whale Water Spout (7 frames)
+```
+Frame 0: "\n\n\n   :"
+Frame 1: "\n\n   :\n   :"  
+Frame 2: "\n  . .\n  -:-\n   :"
+Frame 3: "\n  . .\n .-:-.\n   :"
+Frame 4: "\n  . .\n'.-:-.`\n'  :  '"
+Frame 5: "\n\n .- -.\n;  :  ;"
+Frame 6: "\n\n\n;     ;"
+```
 
-## Known Issues
+### Seaweed Sway (2 frames)
+```
+Frame 0: "("
+Frame 1: " )"
+```
 
-### Spawning Frequency Discrepancies
-- **Seaweed Spawning**: Current implementation spawns seaweed every 5 seconds when below target count, but this frequency differs from the original Perl version. Needs investigation and calibration against original spawning behavior.
-- **Future Calibration**: All spawning timings should be verified against the original asciiquarium behavior for authenticity.
+### Bubble Rise (5 frames)  
+```
+Frame 0: "."
+Frame 1: "o"
+Frame 2: "O" 
+Frame 3: "O"
+Frame 4: "O"
+```
 
-### Color System Status
-- **Fish Colors**: ✅ **FIXED** - Color randomization now matches original Perl `rand_color` function with proper number-to-color mapping
-- **Color Masks**: ✅ **FIXED** - Fish now use randomized color masks identical to original implementation
+## Performance Requirements
 
-### Movement System Status
-- **Fish Movement**: ✅ **FIXED** - Fish now move horizontally only, matching original Perl implementation (`callback_args => [ $speed, 0, 0 ]`)
-- **Authentic Behavior**: Removed incorrect vertical drift and random movement variations
+### Entity Limits
+- **Fish**: Based on screen size formula
+- **Seaweed**: Based on screen width formula
+- **Large Creatures**: Exactly 1
+- **Bubbles**: Dynamic based on fish activity
 
-## Data Assets
+### Memory Management
+- Entity cleanup via death callbacks
+- No entity accumulation over time
+- Stable memory usage during long runs
 
-All ASCII art and color masks from the original Perl implementation will be preserved, including:
-- 20+ fish species designs
-- Shark variants
-- Whale designs
-- Ship artwork
-- Monster designs
-- Castle artwork
-- Seaweed patterns
+## Compatibility Goals
 
-## Compatibility
+The Rust implementation must be **behaviorally identical** to the original:
+- Same entity counts and population formulas
+- Same movement patterns and speeds  
+- Same spawning behavior (death callbacks only)
+- Same visual appearance and timing
+- Same color randomization system
 
-The Rust implementation should be functionally equivalent to the original Perl version while leveraging Rust's performance and safety features. The visual output should be indistinguishable from the original when run in the same terminal environment.
+**Success Criteria**: An observer should not be able to distinguish between the original Perl version and the Rust version when running in the same terminal.

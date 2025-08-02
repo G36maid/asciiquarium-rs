@@ -7,9 +7,9 @@ This document outlines the development roadmap for asciiquarium-rs, a faithful R
 **Version**: Development (Phase 4 - Large Creatures)
 **Core Features**: ✅ Complete and working
 **Environment**: ✅ Complete (water, seaweed, castle)
-**Fish System**: ✅ Enhanced with authentic behavior
-**Predators**: ✅ Sharks implemented
-**Large Creatures**: ✅ Complete (whales, ships, sea monsters)
+**Fish System**: ⚠️ Behavior partially implemented (missing death callbacks)
+**Predators**: ⚠️ Sharks implemented (missing death callback system)
+**Large Creatures**: ⚠️ Entities implemented (missing death callback system)
 
 ### ✅ Working Features
 - **Core Framework**: Entity system, rendering, input handling, screen management
@@ -22,100 +22,138 @@ This document outlines the development roadmap for asciiquarium-rs, a faithful R
 
 ## 🚧 Active Development
 
-### Phase 4: Large Creatures ✅ Complete
+### Phase 4: Critical Behavioral Fixes (Death Callback System)
 
-#### ✅ Completed: Whale System
-- [x] Whale entity implementation
-  - [x] Large ASCII art (left/right variants)
-  - [x] Blue/cyan coloring
-  - [x] Horizontal movement
-- [x] Water spout animation
-  - [x] 7-frame spout sequence
-  - [x] Positioning above whale
-  - [x] Timing and triggering
-- [x] Whale manager and spawning
+#### ❌ **URGENT: Core Architecture Mismatch**
 
-#### ✅ Completed: Ship System
-- [x] Ship entity implementation
-  - [x] Surface-level positioning
-  - [x] Detailed ASCII art with yellow masts and white hulls
-  - [x] Horizontal movement across water
-- [x] Integration with random object spawning
+Our current implementation uses **timer-based spawning** but the original uses a **death callback chain system**. This is a fundamental architectural difference that must be fixed for authentic behavior.
 
-#### ✅ Completed: Sea Monsters
-- [x] Monster entity variants
-  - [x] Tentacle animation frames
-  - [x] Large creature with eyes
-  - [x] Green/dark coloring
-- [x] Monster behavior and movement
+**Current Problems:**
+- Multiple large creatures spawn simultaneously (should be exactly one)
+- Independent spawn timers (should be death-callback triggered)
+- Continuous runtime spawning (should be initialization + callbacks only)
+- Population recalculation (should be death-callback maintenance)
 
-## 🎯 Next Up (Phase 5)
+#### 🎯 **Required Death Callback System**
 
-### Random Object System
-- [ ] Random spawning manager
-  - [ ] Probability-based entity selection
-  - [ ] Timing controls (every 30-60 seconds)
-  - [ ] Population limits
-- [ ] Object lifecycle management
-- [ ] Enhanced collision system
+**Original System:**
+```
+Large Creature Dies → random_object() → New Random Large Creature
+Fish Dies → add_fish() → New Fish (maintains population)
+Seaweed Dies → add_seaweed() → New Seaweed (maintains population)
+Shark Dies → shark_death() → Clean up teeth → random_object()
+```
 
-### Big Fish Species
-- [ ] Complete Large1 and Large2 fish implementations
-  - [ ] Port original big fish ASCII art from Perl
+**Priority Tasks:**
+- [ ] **Replace timer-based managers with death callbacks**
+- [ ] **Implement single large creature constraint** 
+- [ ] **Add entity death callback trait**
+- [ ] **Fix fish population to use death callbacks**
+- [ ] **Fix seaweed 8-12 minute lifespan with death callbacks**
+- [ ] **Implement shark special death handler (cleanup teeth)**
+
+#### ✅ Completed: Entity Implementations
+- [x] Whale system (entities, sprites, animation)
+- [x] Ship system (entities, surface positioning) 
+- [x] Sea monster system (tentacle animation)
+- [x] Shark system (teeth collision entities)
+- [x] Fish system (movement, colors, sprites)
+- [x] Seaweed system (sway animation)
+
+#### ❌ **Architecture Fixes Needed**
+- [ ] **Death Callback Trait Implementation**
+- [ ] **Random Object Manager** (single creature constraint)
+- [ ] **Population Maintenance via Callbacks** 
+- [ ] **Initialization vs Runtime Separation**
+- [ ] **Original Spawn Formulas** (screen_size/350 fish, width/15 seaweed)
+
+## 🎯 Next Up (After Death Callback Fix)
+
+### Phase 5: Big Fish Species
+- [ ] **Big Fish Integration into Random Object System**
+  - [ ] add_big_fish_1() implementation
+  - [ ] add_big_fish_2() implementation  
+  - [ ] Random selection between variants
+  - [ ] Integration into death callback chain
+- [ ] **Original ASCII Art Porting**
+  - [ ] Large detailed fish sprites from Perl
   - [ ] Proper color masks and randomization
-  - [ ] Enhanced movement patterns
-- [ ] Old fish variants from original
+  - [ ] Yellow coloring (default_color => 'YELLOW')
 
-## 🛠️ Technical Improvements
+### Phase 6: Advanced Features  
+- [ ] **Bubble Physics System**
+  - [ ] Fish bubble generation
+  - [ ] 5-frame bubble animation (., o, O, O, O)
+  - [ ] Surface collision and popping
+- [ ] **Classic Mode Implementation** 
+  - [ ] `-c` flag support
+  - [ ] Disable new fish and monsters
+  - [ ] Original fish species only
 
-### Performance & Polish
-- [ ] Performance optimization for larger screens
-- [ ] Remove debug output from fish off-screen detection
-- [ ] Memory usage optimization
+## 🛠️ Technical Debt (Post Death Callback Fix)
+
+### Architectural Cleanup
+- [ ] **Remove timer-based spawn managers** (after death callbacks work)
+- [ ] **Simplify entity managers** (no population tracking needed)
+- [ ] **Remove continuous spawning logic** from main loop
+- [ ] **Entity lifecycle management** via callbacks only
+
+### Performance & Polish  
+- [ ] Memory usage optimization (death callback efficiency)
 - [ ] Frame rate stabilization
+- [ ] Large screen performance optimization
 
-### Features
-- [ ] Classic mode implementation (-c flag for original fish only)
-- [ ] Enhanced error handling and recovery
-- [ ] Configuration system
+## 🧹 Code Quality
 
-## 🧹 Technical Debt
+### Immediate Cleanup
+- [ ] **Death callback system tests**
+- [ ] **Single large creature constraint tests**
+- [ ] **Population maintenance tests**
+- [ ] Remove unused `created_at` fields in entities
 
-### Code Quality
-- [ ] Comprehensive error handling
-- [ ] Remove unused `created_at` fields in water_surface.rs
-- [ ] Code review and cleanup
-- [ ] Documentation improvements
+### Integration Testing
+- [ ] **Original behavior validation** 
+- [ ] **Screen size population formula verification**
+- [ ] **Death callback chain testing**
+- [ ] Cross-platform compatibility
 
-### Testing
-- [ ] Integration tests for collision system
-- [ ] Performance benchmarks
-- [ ] Cross-platform testing
-- [ ] Memory leak detection
+## 🔴 Critical Issues
 
-## 🎨 Known Issues
+### Behavioral Authenticity (HIGH PRIORITY)
+- 🚨 **Death Callback System**: Complete architecture redesign needed
+- 🚨 **Multiple Large Creatures**: Should be exactly one at a time
+- 🚨 **Timer-based Spawning**: Should be death-callback triggered only
+- 🚨 **Population Management**: Should maintain via death callbacks, not recalculation
 
-### Minor Issues
-- 🔧 **Seaweed Spawning**: Frequency differs from original (spawns every 5s vs original timing)
-- 🔧 **Performance**: May need optimization for very large screens
-- 🔧 **Placeholder Art**: Large1/Large2 fish still use simple placeholder sprites
+### Original Behavior Compliance
+- 🔧 **Fish Movement**: ✅ Fixed (horizontal only)
+- 🔧 **Color System**: ✅ Fixed (authentic randomization)
+- 🔧 **Spawn Formulas**: ❌ Need original calculations (screen_size/350, width/15)
+- 🔧 **Seaweed Lifespan**: ❌ Need 8-12 minute lifecycle with death callbacks
 
-### Future Enhancements
-- [ ] Sound effects (terminal bell usage)
-- [ ] Unicode fish variants (optional)
-- [ ] Interactive elements
-- [ ] Save/load state functionality
+### Implementation Gaps
+- 🔧 **Big Fish Species**: Not yet implemented in random object system
+- 🔧 **Shark Death Handler**: Missing teeth cleanup + random object spawn
+- 🔧 **Bubble System**: Not yet implemented
 
-## 📋 Implementation Notes
+## 📋 Implementation Strategy
 
-### Architecture Decisions
-- **Entity-Component System**: Flexible, performant architecture
-- **Depth-based Rendering**: Proper Z-ordering with 22 depth layers
-- **Character-level Transparency**: Faithful to original rendering
-- **Modular Design**: Easy to add new creatures and features
+### Death Callback Implementation Plan
+1. **Add DeathCallback trait** to entity system
+2. **Create RandomObjectManager** with single creature constraint  
+3. **Replace all spawn timers** with death callback registration
+4. **Implement original population formulas** for initialization
+5. **Add entity lifecycle management** via callback chain
 
-### Compatibility Goals
-- **Visual Authenticity**: Indistinguishable from original when possible
-- **Behavior Matching**: Movement, timing, and interactions match original
-- **Performance**: Smooth animation on typical terminal sizes
-- **Extensibility**: Easy to add new features while maintaining compatibility
+### Architecture Principles  
+- **Death Callback Chain**: Core system for entity spawning
+- **Initialization vs Runtime**: Clear separation of phases
+- **Single Large Creature**: Constraint enforcement
+- **Original Formulas**: Exact population calculations
+- **Behavioral Authenticity**: Indistinguishable from original
+
+### Success Metrics
+- **Single Large Creature**: Never more than one simultaneously
+- **Population Stability**: Fish/seaweed counts maintained via callbacks  
+- **Authentic Timing**: Match original spawn/death patterns
+- **Visual Fidelity**: Identical appearance to Perl version
