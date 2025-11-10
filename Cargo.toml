@@ -3,8 +3,8 @@ name = "asciiquarium-rs"
 version = "0.1.0"
 description = "Yet another aquarium/sea animation in ASCII art with Rust."
 authors = ["G36maid <miku65434@gmail.com>"]
-license = "MIT"
-edition = "2024"
+license = "GPL-2.0-only"
+edition = "2021"
 
 [dependencies]
 crossterm = "0.28.1"

@@ -9,6 +9,7 @@ pub struct Ship {
     velocity: Velocity,
     direction: Direction,
     sprite: Sprite,
+    #[allow(dead_code)]
     created_at: Instant,
     alive: bool,
 }
@@ -25,14 +26,17 @@ impl Ship {
         };
 
         // Starting position and velocity
+        // Match original Perl asymmetric spawn behavior
         let (x, dx) = match direction {
             Direction::Right => {
                 // Start off-screen left, move right
+                // Original: x = -24
                 (-24.0, 1.0)
             }
             Direction::Left => {
-                // Start off-screen right, move left
-                (screen_bounds.width as f32 + 2.0, -1.0)
+                // Start near right edge, move left
+                // Original: x = width - 2
+                (screen_bounds.width as f32 - 2.0, -1.0)
             }
         };
 
@@ -199,7 +203,7 @@ mod tests {
                     assert_eq!(ship.velocity().dx, 1.0);
                 }
                 Direction::Left => {
-                    assert_eq!(ship.position().x, 82.0); // screen_width + 2
+                    assert_eq!(ship.position().x, 78.0); // screen_width - 2
                     assert_eq!(ship.velocity().dx, -1.0);
                 }
             }

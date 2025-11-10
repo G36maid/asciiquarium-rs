@@ -24,10 +24,15 @@ pub struct App {
     pub screen_bounds: Rect,
     /// Whether aquarium has been initialized
     pub initialized: bool,
+    /// Previous screen size for detecting resizes
+    pub previous_size: (u16, u16),
+    /// Classic mode flag (disables new fish/monsters, like -c flag in original)
+    pub classic_mode: bool,
 }
 
 impl Default for App {
     fn default() -> Self {
+        let classic_mode = false; // Default to modern mode (with new fish)
         Self {
             running: true,
             entity_manager: EntityManager::new(),
@@ -36,6 +41,8 @@ impl Default for App {
             paused: false,
             screen_bounds: Rect::new(0, 0, 80, 24), // Default size
             initialized: false,
+            previous_size: (80, 24),
+            classic_mode,
         }
     }
 }
@@ -46,11 +53,27 @@ impl App {
         Self::default()
     }
 
+    /// Constructs a new instance of [`App`] with classic mode enabled.
+    pub fn new_classic() -> Self {
+        Self {
+            classic_mode: true,
+            entity_manager: EntityManager::new_classic(),
+            ..Default::default()
+        }
+    }
+
     /// Run the application's main loop.
     pub fn run(mut self, mut terminal: DefaultTerminal) -> color_eyre::Result<()> {
         while self.running {
-            // Get terminal size and update screen bounds
+            // Get terminal size and check for resize
             let size = terminal.size()?;
+            let current_size = (size.width, size.height);
+
+            // Detect size change and trigger reinitialization
+            if current_size != self.previous_size {
+                self.on_resize(current_size);
+            }
+
             self.screen_bounds = Rect::new(0, 0, size.width, size.height);
 
             // Initialize aquarium if needed (like original's redraw)
@@ -67,10 +90,11 @@ impl App {
     pub fn handle_events(&mut self) -> color_eyre::Result<()> {
         match self.events.next()? {
             Event::Tick => self.tick(),
-            Event::Crossterm(event) => match event {
-                crossterm::event::Event::Key(key_event) => self.handle_key_event(key_event)?,
-                _ => {}
-            },
+            Event::Crossterm(event) => {
+                if let crossterm::event::Event::Key(key_event) = event {
+                    self.handle_key_event(key_event)?;
+                }
+            }
             Event::App(app_event) => match app_event {
                 AppEvent::Quit => self.quit(),
             },
@@ -118,9 +142,28 @@ impl App {
         self.paused = !self.paused;
     }
 
+    /// Handle screen resize by reinitializing aquarium with new entity counts
+    fn on_resize(&mut self, new_size: (u16, u16)) {
+        self.previous_size = new_size;
+        // Preserve classic_mode setting when reinitializing
+        let classic_mode = self.entity_manager.classic_mode();
+        self.entity_manager = if classic_mode {
+            EntityManager::new_classic()
+        } else {
+            EntityManager::new()
+        };
+        self.initialized = false;
+    }
+
     /// Redraw by clearing all entities and reinitializing
     pub fn redraw(&mut self) {
-        self.entity_manager = EntityManager::new();
+        // Preserve classic_mode setting when reinitializing
+        let classic_mode = self.entity_manager.classic_mode();
+        self.entity_manager = if classic_mode {
+            EntityManager::new_classic()
+        } else {
+            EntityManager::new()
+        };
         self.initialized = false;
     }
 

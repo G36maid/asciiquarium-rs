@@ -4,42 +4,108 @@ use rand::Rng;
 use ratatui::{layout::Rect, style::Color};
 use std::time::{Duration, Instant};
 
+/// Fish species category (new vs old from original Perl)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FishCategory {
+    New,
+    Old,
+}
+
 /// Fish species with their ASCII art and colors
+/// Matches all 12 species from original asciiquarium.pl
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FishSpecies {
-    Small1,
-    Small2,
-    Medium1,
-    Medium2,
-    Large1,
-    Large2,
-    // Add more species as we implement them
+    // NEW FISH (4 species) - Added in asciiquarium 1.1
+    NewSmall1,  // Small angled fish with fins
+    NewSmall2,  // Fancy double-bracket fish
+    NewMedium1, // Large fancy fish with question marks
+    NewMedium2, // Bulgy fish with comma decorations
+
+    // OLD FISH (8 species) - Original classic fish
+    OldFancy,      // Fancy fish with scales and apostrophes
+    OldSimple,     // Simple angled fish with straight body (>=  (o>)
+    OldWavy,       // Dotted wavy fish (:::::::)
+    OldTiny,       // Tiny simple fish (><_'>)
+    OldCommaLarge, // Small comma fish with quotes (..\,)
+    OldAngledFin,  // Small angled fish with fins (same art as NewSmall1)
+    OldCommaSmall, // Even smaller comma fish (,\)
+    OldRounded,    // Rounded small fish with diagonal body (\/ o\)
 }
 
 impl FishSpecies {
-    /// Get all available fish species
-    pub fn all_species() -> &'static [FishSpecies] {
+    /// Get category of this fish species
+    pub fn category(&self) -> FishCategory {
+        match self {
+            FishSpecies::NewSmall1
+            | FishSpecies::NewSmall2
+            | FishSpecies::NewMedium1
+            | FishSpecies::NewMedium2 => FishCategory::New,
+
+            FishSpecies::OldFancy
+            | FishSpecies::OldSimple
+            | FishSpecies::OldWavy
+            | FishSpecies::OldTiny
+            | FishSpecies::OldCommaLarge
+            | FishSpecies::OldAngledFin
+            | FishSpecies::OldCommaSmall
+            | FishSpecies::OldRounded => FishCategory::Old,
+        }
+    }
+
+    /// Get all new fish species
+    pub fn new_species() -> &'static [FishSpecies] {
         &[
-            FishSpecies::Small1,
-            FishSpecies::Small2,
-            FishSpecies::Medium1,
-            FishSpecies::Medium2,
-            FishSpecies::Large1,
-            FishSpecies::Large2,
+            FishSpecies::NewSmall1,
+            FishSpecies::NewSmall2,
+            FishSpecies::NewMedium1,
+            FishSpecies::NewMedium2,
         ]
     }
 
-    /// Get a random fish species
-    pub fn random() -> Self {
-        let species = Self::all_species();
+    /// Get all old fish species
+    pub fn old_species() -> &'static [FishSpecies] {
+        &[
+            FishSpecies::OldFancy,
+            FishSpecies::OldSimple,
+            FishSpecies::OldWavy,
+            FishSpecies::OldTiny,
+            FishSpecies::OldCommaLarge,
+            FishSpecies::OldAngledFin,
+            FishSpecies::OldCommaSmall,
+            FishSpecies::OldRounded,
+        ]
+    }
+
+    /// Get a random fish species following original logic:
+    /// - 25% chance for new fish (int(rand(12)) > 8, meaning 9,10,11 out of 0-11)
+    /// - 75% chance for old fish
+    /// - classic_mode flag disables new fish
+    pub fn random(classic_mode: bool) -> Self {
         let mut rng = rand::thread_rng();
-        species[rng.gen_range(0..species.len())]
+
+        if classic_mode {
+            // Classic mode: only old fish
+            let old = Self::old_species();
+            old[rng.gen_range(0..old.len())]
+        } else {
+            // Modern mode: 25% new, 75% old (matching original int(rand(12)) > 8)
+            if rng.gen_range(0..12) > 8 {
+                // New fish (9, 10, 11 = 3 out of 12 = 25%)
+                let new = Self::new_species();
+                new[rng.gen_range(0..new.len())]
+            } else {
+                // Old fish (0-8 = 9 out of 12 = 75%)
+                let old = Self::old_species();
+                old[rng.gen_range(0..old.len())]
+            }
+        }
     }
 
     /// Get the sprites for this fish species (right-facing, left-facing)
     pub fn get_sprites(&self) -> (Sprite, Sprite) {
         match self {
-            FishSpecies::Small1 => {
+            // NEW FISH
+            FishSpecies::NewSmall1 => {
                 let right_art = r#"   \
   / \
 >=_('>
@@ -67,7 +133,7 @@ impl FishSpecies {
                     Sprite::from_ascii_art_with_random_colors(left_art, Some(left_mask)),
                 )
             }
-            FishSpecies::Small2 => {
+            FishSpecies::NewSmall2 => {
                 let right_art = r#"     ,
      \}\
 \  .'  `\
@@ -103,7 +169,7 @@ impl FishSpecies {
                     Sprite::from_ascii_art_with_random_colors(left_art, Some(left_mask)),
                 )
             }
-            FishSpecies::Medium1 => {
+            FishSpecies::NewMedium1 => {
                 let right_art = r#"            \\'`.
              )  \
 (`.??????_.-`' ' '`-.
@@ -143,7 +209,7 @@ _/ (o)        '.??.' /
                     Sprite::from_ascii_art_with_random_colors(left_art, Some(left_mask)),
                 )
             }
-            FishSpecies::Medium2 => {
+            FishSpecies::NewMedium2 => {
                 let right_art = r#"       ,--,_
 __    _\.---'-.
 \ '.-"     // o\
@@ -171,22 +237,203 @@ __    _\.---'-.
                     Sprite::from_ascii_art_with_random_colors(left_art, Some(left_mask)),
                 )
             }
-            FishSpecies::Large1 => {
-                // Placeholder for big fish - will implement later
-                let right_art = "><(((((*>";
-                let left_art = "<*))))))><";
+
+            // OLD FISH
+            FishSpecies::OldFancy => {
+                let right_art = r#"       \
+     ...\..,
+\  /'       \
+ >=     (  ' >
+/  \      / /
+    `"'"'/'"#;
+                let right_mask = r#"       2
+     1112111
+6  11       1
+ 66     7  4 5
+6  1      3 1
+    11111311"#;
+
+                let left_art = r#"      /
+  ,../...
+ /       '\  /
+< '  )     =<
+ \ \      /  \
+  `'\'"'"'"#;
+                let left_mask = r#"      2
+  1112111
+ 1       11  6
+5 4  7     66
+ 1 3      1  6
+  11311111"#;
+
                 (
-                    Sprite::from_ascii_art(right_art, None),
-                    Sprite::from_ascii_art(left_art, None),
+                    Sprite::from_ascii_art_with_random_colors(right_art, Some(right_mask)),
+                    Sprite::from_ascii_art_with_random_colors(left_art, Some(left_mask)),
                 )
             }
-            FishSpecies::Large2 => {
-                // Placeholder for big fish - will implement later
-                let right_art = "><(((((o>";
-                let left_art = "<o))))))><";
+            FishSpecies::OldSimple => {
+                let right_art = r#"    \
+\ /--\
+>=  (o>
+/ \__/
+    /"#;
+                let right_mask = r#"    2
+6 1111
+66  745
+6 1111
+    3"#;
+
+                let left_art = r#"  /
+ /--\ /
+<o)  =<
+ \__/ \
+  \"#;
+                let left_mask = r#"  2
+ 1111 6
+547  66
+ 1111 6
+  3"#;
+
                 (
-                    Sprite::from_ascii_art(right_art, None),
-                    Sprite::from_ascii_art(left_art, None),
+                    Sprite::from_ascii_art_with_random_colors(right_art, Some(right_mask)),
+                    Sprite::from_ascii_art_with_random_colors(left_art, Some(left_mask)),
+                )
+            }
+            FishSpecies::OldWavy => {
+                let right_art = r#"       \:.
+\;,   ,;\\\\\,,
+  \\\\\;;:::::::o
+  ///;;::::::::<
+ /;` ``/////``"#;
+                let right_mask = r#"       222
+666   1122211
+  6661111111114
+  66611111111115
+ 666 113333311"#;
+
+                let left_art = r#"      .:/
+   ,,///;,   ,;/
+ o:::::::;;///
+>::::::::;;\\\\\
+  ''\\\\\\\\\'' ';\\"#;
+                let left_mask = r#"      222
+   1122211   666
+ 4111111111666
+51111111111666
+  113333311 666"#;
+
+                (
+                    Sprite::from_ascii_art_with_random_colors(right_art, Some(right_mask)),
+                    Sprite::from_ascii_art_with_random_colors(left_art, Some(left_mask)),
+                )
+            }
+            FishSpecies::OldTiny => {
+                let right_art = r#"  __
+><_'>
+   '"#;
+                let right_mask = r#"  11
+61145
+   3"#;
+
+                let left_art = r#" __
+<'_><
+ `"#;
+                let left_mask = r#" 11
+54116
+ 3"#;
+
+                (
+                    Sprite::from_ascii_art_with_random_colors(right_art, Some(right_mask)),
+                    Sprite::from_ascii_art_with_random_colors(left_art, Some(left_mask)),
+                )
+            }
+            FishSpecies::OldCommaLarge => {
+                let right_art = r#"   ..\,
+>='   ('>
+  '''/'"#;
+                let right_mask = r#"   1121
+661   745
+  111311"#;
+
+                let left_art = r#"  ,/..
+<')   `=<
+ ``\```"#;
+                let left_mask = r#"  1211
+547   166
+ 113111"#;
+
+                (
+                    Sprite::from_ascii_art_with_random_colors(right_art, Some(right_mask)),
+                    Sprite::from_ascii_art_with_random_colors(left_art, Some(left_mask)),
+                )
+            }
+            FishSpecies::OldAngledFin => {
+                // Same art as NewSmall1 (appears in both new and old arrays in original)
+                let right_art = r#"   \
+  / \
+>=_('>
+  \_/
+   /"#;
+                let right_mask = r#"   2
+  1 1
+661745
+  111
+   3"#;
+
+                let left_art = r#"  /
+ / \
+<')_=<
+ \_/
+  \"#;
+                let left_mask = r#"  2
+ 1 1
+547166
+ 111
+  3"#;
+
+                (
+                    Sprite::from_ascii_art_with_random_colors(right_art, Some(right_mask)),
+                    Sprite::from_ascii_art_with_random_colors(left_art, Some(left_mask)),
+                )
+            }
+            FishSpecies::OldCommaSmall => {
+                let right_art = r#"  ,\
+>=('>
+  '/"#;
+                let right_mask = r#"  12
+66745
+  13"#;
+
+                let left_art = r#" /,
+<')=<
+ \`"#;
+                let left_mask = r#" 21
+54766
+ 31"#;
+
+                (
+                    Sprite::from_ascii_art_with_random_colors(right_art, Some(right_mask)),
+                    Sprite::from_ascii_art_with_random_colors(left_art, Some(left_mask)),
+                )
+            }
+            FishSpecies::OldRounded => {
+                let right_art = r#"  __
+\/ o\
+/\__/"#;
+                let right_mask = r#"  11
+61 41
+61111"#;
+
+                let left_art = r#" __
+/o \/
+\__/\"#;
+                let left_mask = r#" 11
+14 16
+11116"#;
+
+                (
+                    Sprite::from_ascii_art_with_random_colors(right_art, Some(right_mask)),
+                    Sprite::from_ascii_art_with_random_colors(left_art, Some(left_mask)),
                 )
             }
         }
@@ -194,13 +441,20 @@ __    _\.---'-.
 
     /// Get the base color for this fish species
     pub fn get_base_color(&self) -> Color {
+        // Colors are randomized in the original, we just provide a base
         match self {
-            FishSpecies::Small1 => Color::Yellow,
-            FishSpecies::Small2 => Color::Cyan,
-            FishSpecies::Medium1 => Color::Green,
-            FishSpecies::Medium2 => Color::Magenta,
-            FishSpecies::Large1 => Color::Blue,
-            FishSpecies::Large2 => Color::Red,
+            FishSpecies::NewSmall1 => Color::Yellow,
+            FishSpecies::NewSmall2 => Color::Cyan,
+            FishSpecies::NewMedium1 => Color::Green,
+            FishSpecies::NewMedium2 => Color::Magenta,
+            FishSpecies::OldFancy => Color::Blue,
+            FishSpecies::OldSimple => Color::Red,
+            FishSpecies::OldWavy => Color::Green,
+            FishSpecies::OldTiny => Color::Yellow,
+            FishSpecies::OldCommaLarge => Color::Cyan,
+            FishSpecies::OldAngledFin => Color::Magenta,
+            FishSpecies::OldCommaSmall => Color::Blue,
+            FishSpecies::OldRounded => Color::Red,
         }
     }
 }
@@ -224,10 +478,11 @@ pub struct Fish {
 
 impl Fish {
     /// Create a new fish with random properties
-    pub fn new_random(id: EntityId, screen_bounds: Rect) -> Self {
+    /// classic_mode: if true, only spawn old fish (matches -c flag)
+    pub fn new_random(id: EntityId, screen_bounds: Rect, classic_mode: bool) -> Self {
         let mut rng = rand::thread_rng();
 
-        let species = FishSpecies::random();
+        let species = FishSpecies::random(classic_mode);
         let (right_sprite, left_sprite) = species.get_sprites();
         let base_color = species.get_base_color();
 
@@ -246,14 +501,16 @@ impl Fish {
 
         let (x, dx) = match direction {
             Direction::Right => {
-                // Start completely off-screen to the left, move right
-                let x = -(sprite_bounds.0 as f32 + 5.0);
+                // Start off-screen to the left, move right
+                // Original Perl: X = 1 - WIDTH (fish starts fully off left edge)
+                let x = 1.0 - sprite_bounds.0 as f32;
                 let speed = rng.gen_range(0.5..2.0);
                 (x, speed)
             }
             Direction::Left => {
-                // Start completely off-screen to the right, move left
-                let x = screen_bounds.width as f32 + sprite_bounds.0 as f32 + 5.0;
+                // Start near right edge, move left
+                // Original Perl: X = width - 2 (fish starts mostly visible)
+                let x = screen_bounds.width as f32 - 2.0;
                 let speed = rng.gen_range(0.5..2.0);
                 (x, -speed)
             }
@@ -376,11 +633,12 @@ impl Fish {
         let pos_x = self.position.x;
         let pos_y = self.position.y;
 
-        // Check if completely off screen with generous margins
-        let off_left = pos_x < -(sprite_bounds.0 as f32 + 10.0);
-        let off_right = pos_x > screen_bounds.width as f32 + sprite_bounds.0 as f32 + 10.0;
-        let off_top = pos_y < -(sprite_bounds.1 as f32 + 5.0);
-        let off_bottom = pos_y > screen_bounds.height as f32 + sprite_bounds.1 as f32 + 5.0;
+        // Match Term::Animation die_offscreen behavior
+        // Die when fish is completely off screen
+        let off_left = (pos_x + sprite_bounds.0 as f32) < 0.0;
+        let off_right = pos_x > (screen_bounds.width as f32);
+        let off_top = (pos_y + sprite_bounds.1 as f32) < 0.0;
+        let off_bottom = pos_y > (screen_bounds.height as f32);
 
         if off_left || off_right || off_top || off_bottom {
             self.alive = false;
@@ -452,6 +710,18 @@ impl Entity for Fish {
     fn death_callback(&self) -> Option<DeathCallback> {
         Some(crate::spawning::add_fish)
     }
+
+    fn should_spawn_bubble(&mut self, delta_time: Duration) -> Option<Position> {
+        if !self.alive {
+            return None;
+        }
+
+        if self.should_emit_bubble(delta_time) {
+            Some(self.get_bubble_position())
+        } else {
+            None
+        }
+    }
 }
 
 #[cfg(test)]
@@ -462,7 +732,7 @@ mod tests {
     #[test]
     fn test_fish_creation() {
         let screen_bounds = Rect::new(0, 0, 80, 24);
-        let fish = Fish::new_random(1, screen_bounds);
+        let fish = Fish::new_random(1, screen_bounds, false);
 
         assert!(fish.is_alive());
         assert_eq!(fish.entity_type(), "fish");
@@ -470,28 +740,115 @@ mod tests {
     }
 
     #[test]
-    fn test_fish_species() {
-        let species = FishSpecies::Small1;
-        let (right, left) = species.get_sprites();
+    fn test_fish_species_count() {
+        assert_eq!(FishSpecies::new_species().len(), 4);
+        assert_eq!(FishSpecies::old_species().len(), 8);
+    }
 
-        assert!(!right.lines.is_empty());
-        assert!(!left.lines.is_empty());
-        assert_ne!(right.lines, left.lines); // Should be different sprites
+    #[test]
+    fn test_fish_category() {
+        assert_eq!(FishSpecies::NewSmall1.category(), FishCategory::New);
+        assert_eq!(FishSpecies::OldFancy.category(), FishCategory::Old);
+    }
+
+    #[test]
+    fn test_classic_mode_only_spawns_old_fish() {
+        let screen_bounds = Rect::new(0, 0, 80, 24);
+
+        // Test multiple fish to ensure all are old
+        for i in 0..20 {
+            let fish = Fish::new_random(i, screen_bounds, true);
+            assert_eq!(
+                fish.species().category(),
+                FishCategory::Old,
+                "Classic mode should only spawn old fish"
+            );
+        }
+    }
+
+    #[test]
+    fn test_fish_species_sprites() {
+        // Test that all species have valid sprites
+        let all_species = [
+            FishSpecies::NewSmall1,
+            FishSpecies::NewSmall2,
+            FishSpecies::NewMedium1,
+            FishSpecies::NewMedium2,
+            FishSpecies::OldFancy,
+            FishSpecies::OldSimple,
+            FishSpecies::OldWavy,
+            FishSpecies::OldTiny,
+            FishSpecies::OldCommaLarge,
+            FishSpecies::OldAngledFin,
+            FishSpecies::OldCommaSmall,
+            FishSpecies::OldRounded,
+        ];
+
+        for species in all_species {
+            let (right, left) = species.get_sprites();
+            assert!(
+                !right.lines.is_empty(),
+                "Species {:?} has empty right sprite",
+                species
+            );
+            assert!(
+                !left.lines.is_empty(),
+                "Species {:?} has empty left sprite",
+                species
+            );
+            assert_ne!(
+                right.lines, left.lines,
+                "Species {:?} has identical sprites",
+                species
+            );
+        }
     }
 
     #[test]
     fn test_fish_movement() {
         let mut fish = Fish::new(
             1,
-            Position::new(10.0, 10.0, depth::depth::FISH_START),
+            Position::new(10.0, 10.0, depth::FISH_START),
             Velocity::new(1.0, 0.0),
             Direction::Right,
-            FishSpecies::Small1,
+            FishSpecies::NewSmall1,
         );
 
         let initial_x = fish.position().x;
         fish.update(Duration::from_millis(16), Rect::new(0, 0, 80, 24)); // ~60 FPS
 
         assert!(fish.position().x > initial_x); // Should move right
+    }
+
+    #[test]
+    fn test_fish_selection_distribution() {
+        // Test that fish selection follows approximately 25%/75% distribution
+        let screen_bounds = Rect::new(0, 0, 80, 24);
+        let sample_size = 1000;
+        let mut new_count = 0;
+        let mut old_count = 0;
+
+        for i in 0..sample_size {
+            let fish = Fish::new_random(i, screen_bounds, false);
+            match fish.species().category() {
+                FishCategory::New => new_count += 1,
+                FishCategory::Old => old_count += 1,
+            }
+        }
+
+        let new_percentage = (new_count as f32 / sample_size as f32) * 100.0;
+        let old_percentage = (old_count as f32 / sample_size as f32) * 100.0;
+
+        // Allow 10% margin of error (15%-35% for new, 65%-85% for old)
+        assert!(
+            new_percentage >= 15.0 && new_percentage <= 35.0,
+            "New fish percentage {} should be around 25%",
+            new_percentage
+        );
+        assert!(
+            old_percentage >= 65.0 && old_percentage <= 85.0,
+            "Old fish percentage {} should be around 75%",
+            old_percentage
+        );
     }
 }

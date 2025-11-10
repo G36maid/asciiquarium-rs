@@ -1,29 +1,22 @@
 use crate::depth;
-use crate::entity::{Animation, Entity, EntityId, Position, Sprite, Velocity};
+use crate::entity::{Entity, EntityId, Position, Sprite, Velocity};
 use ratatui::layout::Rect;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
-/// Water surface entity that creates animated wave patterns
+/// Water surface entity - static, no animation (matches original Perl behavior)
 #[derive(Debug, Clone)]
 pub struct WaterSurface {
     id: EntityId,
     position: Position,
     layer_index: u8, // 0-3 for the 4 water layers
-    animation: Animation,
+    sprite: Sprite,
     alive: bool,
-    created_at: Instant,
 }
 
 impl WaterSurface {
     /// Create a new water surface layer
     pub fn new(id: EntityId, layer_index: u8, screen_width: u16) -> Self {
-        let (sprites, depth) = Self::create_water_layer_sprites(layer_index, screen_width);
-
-        let animation = Animation::new(
-            sprites,
-            Duration::from_millis(800), // Slow wave animation
-            true,                       // Loop forever
-        );
+        let (sprite, depth) = Self::create_water_layer_sprite(layer_index, screen_width);
 
         // Position at the top of screen for water surface
         let y = 5.0 + layer_index as f32; // Start at Y=5, each layer below the previous
@@ -33,14 +26,13 @@ impl WaterSurface {
             id,
             position,
             layer_index,
-            animation,
+            sprite,
             alive: true,
-            created_at: Instant::now(),
         }
     }
 
-    /// Create sprites for a specific water layer with proper tiling
-    fn create_water_layer_sprites(layer_index: u8, screen_width: u16) -> (Vec<Sprite>, u8) {
+    /// Create a static sprite for a specific water layer with proper tiling
+    fn create_water_layer_sprite(layer_index: u8, screen_width: u16) -> (Sprite, u8) {
         // Original water surface patterns from asciiquarium.pl
         let water_segments = [
             "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", // Layer 0
@@ -53,38 +45,15 @@ impl WaterSurface {
         let segment_length = segment.len();
 
         // Calculate how many times to repeat the segment to fill screen width
-        let repeat_count = (screen_width as usize / segment_length) + 2; // +2 for smooth scrolling
+        // Original Perl: $segment_repeat = int($anim->width()/$segment_size) + 1;
+        let repeat_count = (screen_width as usize / segment_length) + 1;
 
-        // Create multiple animation frames for wave movement effect
-        let mut frames = Vec::new();
+        // Tile the segment to fill the screen width
+        let tiled_segment = segment.repeat(repeat_count);
 
-        // Create 8 frames by shifting the pattern slightly
-        for frame in 0..8 {
-            let mut tiled_segment;
-
-            // Shift the pattern by moving the start position
-            let shift = frame * 2; // Shift by 2 characters per frame
-            let extended_segment = segment.repeat(repeat_count + 1);
-
-            // Extract the shifted portion
-            let start_pos = shift % segment_length;
-            let end_pos = start_pos + (screen_width as usize) + 10; // Extra for edge cases
-
-            if end_pos <= extended_segment.len() {
-                tiled_segment = extended_segment[start_pos..end_pos].to_string();
-            } else {
-                tiled_segment = extended_segment[start_pos..].to_string();
-                let remaining = end_pos - extended_segment.len();
-                tiled_segment.push_str(&extended_segment[..remaining]);
-            }
-
-            // Trim to exact screen width
-            tiled_segment.truncate(screen_width as usize);
-
-            // Create sprite with cyan color mask
-            let color_mask = "C".repeat(tiled_segment.len());
-            frames.push(Sprite::from_ascii_art(&tiled_segment, Some(&color_mask)));
-        }
+        // Create sprite with cyan color mask
+        let color_mask = "C".repeat(tiled_segment.len());
+        let sprite = Sprite::from_ascii_art(&tiled_segment, Some(&color_mask));
 
         // Get appropriate depth for this layer
         let depth = match layer_index {
@@ -95,13 +64,13 @@ impl WaterSurface {
             _ => depth::water_line_depth(0),
         };
 
-        (frames, depth)
+        (sprite, depth)
     }
 
     /// Update the water surface to resize for new screen width
     pub fn resize(&mut self, new_screen_width: u16) {
-        let (new_sprites, _) = Self::create_water_layer_sprites(self.layer_index, new_screen_width);
-        self.animation = Animation::new(new_sprites, Duration::from_millis(800), true);
+        let (new_sprite, _) = Self::create_water_layer_sprite(self.layer_index, new_screen_width);
+        self.sprite = new_sprite;
     }
 
     /// Get the layer index for this water surface
@@ -136,16 +105,11 @@ impl Entity for WaterSurface {
     }
 
     fn get_current_sprite(&self) -> &Sprite {
-        self.animation.get_current_sprite()
+        &self.sprite
     }
 
     fn update(&mut self, _delta_time: Duration, _screen_bounds: Rect) {
-        if !self.alive {
-            return;
-        }
-
-        // Update animation for wave movement
-        self.animation.update();
+        // Water surface is completely static - no updates needed
     }
 
     fn is_alive(&self) -> bool {
@@ -196,16 +160,26 @@ mod tests {
 
     #[test]
     fn test_sprite_tiling() {
-        let (sprites, _) = WaterSurface::create_water_layer_sprites(0, 80);
+        let (sprite, _) = WaterSurface::create_water_layer_sprite(0, 80);
 
-        assert!(!sprites.is_empty());
+        assert!(!sprite.lines.is_empty());
 
-        let first_sprite = &sprites[0];
-        assert!(!first_sprite.lines.is_empty());
-
-        // Should create a line roughly 80 characters wide
-        let line_length = first_sprite.lines[0].len();
+        // Should create a line at least 80 characters wide
+        let line_length = sprite.lines[0].len();
         assert!(line_length >= 80);
-        assert!(line_length <= 90); // Some tolerance for tiling
+    }
+
+    #[test]
+    fn test_water_is_static() {
+        let mut water = WaterSurface::new(1, 0, 80);
+        let original_sprite_lines = water.sprite.lines.clone();
+
+        // Update multiple times
+        water.update(Duration::from_secs(1), Rect::new(0, 0, 80, 24));
+        water.update(Duration::from_secs(1), Rect::new(0, 0, 80, 24));
+        water.update(Duration::from_secs(1), Rect::new(0, 0, 80, 24));
+
+        // Sprite should not change - water is static
+        assert_eq!(water.sprite.lines, original_sprite_lines);
     }
 }

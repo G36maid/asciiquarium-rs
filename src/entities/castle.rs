@@ -21,7 +21,7 @@ impl Castle {
         let x = screen_bounds.width.saturating_sub(32) as f32;
         let y = screen_bounds.height.saturating_sub(13) as f32;
 
-        let position = Position::new(x, y, crate::depth::depth::CASTLE);
+        let position = Position::new(x, y, crate::depth::CASTLE);
 
         Self {
             id,
@@ -35,7 +35,7 @@ impl Castle {
     /// Create a new castle with specific position
     pub fn new_at_position(id: EntityId, x: f32, y: f32) -> Self {
         let castle_sprite = Self::create_castle_sprite();
-        let position = Position::new(x, y, crate::depth::depth::CASTLE);
+        let position = Position::new(x, y, crate::depth::CASTLE);
 
         Self {
             id,
@@ -166,7 +166,7 @@ mod tests {
 
         assert!(castle.is_alive());
         assert_eq!(castle.entity_type(), "castle");
-        assert_eq!(castle.depth(), crate::depth::depth::CASTLE);
+        assert_eq!(castle.depth(), crate::depth::CASTLE);
 
         // Should be positioned at bottom-right
         assert_eq!(castle.position().x, 48.0); // 80 - 32 = 48

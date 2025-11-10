@@ -29,15 +29,17 @@ impl Shark {
 
         let (right_sprite, left_sprite) = Self::create_shark_sprites();
 
-        // Position based on direction (spawn off-screen)
+        // Position based on direction (match original Perl asymmetric spawn)
         let (x, velocity) = match direction {
             Direction::Right => {
+                // Original: x = -53
                 let x = -53.0; // Spawn off left edge
                 let velocity = Velocity::new(2.0, 0.0); // Move right
                 (x, velocity)
             }
             Direction::Left => {
-                let x = (screen_bounds.width + 2) as f32; // Spawn off right edge
+                // Original: x = width - 2
+                let x = (screen_bounds.width as f32) - 2.0; // Spawn near right edge
                 let velocity = Velocity::new(-2.0, 0.0); // Move left
                 (x, velocity)
             }
@@ -46,7 +48,7 @@ impl Shark {
         // Random Y position (original: rand(height - (10 + 9)) + 9)
         let y = rng.gen_range(9..(screen_bounds.height.saturating_sub(19)).max(10)) as f32;
 
-        let position = Position::new(x, y, crate::depth::depth::SHARK);
+        let position = Position::new(x, y, crate::depth::SHARK);
 
         Self {
             id,
@@ -142,7 +144,7 @@ impl Shark {
     pub fn get_teeth_position(&self) -> Position {
         let teeth_offset = match self.direction {
             Direction::Right => (44.0, 7.0), // Original: teeth_x = -9, shark_x = -53, so offset = 44
-            Direction::Left => (-44.0, 7.0), // Original: teeth_x = x + 9, so offset = 9
+            Direction::Left => (9.0, 7.0),   // Original: teeth_x = x + 9, so offset = 9
         };
 
         Position::new(
@@ -349,7 +351,7 @@ mod tests {
 
         assert!(shark.is_alive());
         assert_eq!(shark.entity_type(), "shark");
-        assert_eq!(shark.depth(), crate::depth::depth::SHARK);
+        assert_eq!(shark.depth(), crate::depth::SHARK);
     }
 
     #[test]
@@ -365,19 +367,19 @@ mod tests {
 
     #[test]
     fn test_shark_teeth_position() {
-        let position = Position::new(10.0, 10.0, crate::depth::depth::SHARK);
+        let position = Position::new(10.0, 10.0, crate::depth::SHARK);
         let velocity = Velocity::new(2.0, 0.0);
         let shark = Shark::new(1, position, velocity, Direction::Right);
 
         let teeth_pos = shark.get_teeth_position();
         assert_eq!(teeth_pos.x, 54.0); // 10 + 44
         assert_eq!(teeth_pos.y, 17.0); // 10 + 7
-        assert_eq!(teeth_pos.depth, crate::depth::depth::SHARK + 1);
+        assert_eq!(teeth_pos.depth, crate::depth::SHARK + 1);
     }
 
     #[test]
     fn test_shark_teeth_creation() {
-        let position = Position::new(10.0, 10.0, crate::depth::depth::SHARK);
+        let position = Position::new(10.0, 10.0, crate::depth::SHARK);
         let velocity = Velocity::new(2.0, 0.0);
         let teeth = SharkTeeth::new(2, position, velocity, 1);
 
@@ -388,7 +390,7 @@ mod tests {
 
     #[test]
     fn test_shark_movement() {
-        let position = Position::new(10.0, 10.0, crate::depth::depth::SHARK);
+        let position = Position::new(10.0, 10.0, crate::depth::SHARK);
         let velocity = Velocity::new(2.0, 0.0);
         let mut shark = Shark::new(1, position, velocity, Direction::Right);
 

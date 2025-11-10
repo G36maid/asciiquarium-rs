@@ -13,6 +13,16 @@ This document outlines the conventions and commands for agentic coding in this r
 
 ## Code Style Guidelines
 
+*   **Imports:** Use `use` statements at the top of each module, grouped by `crate`, `super`, `self`, and external crates.
+*   **Formatting:** Adhere to `rustfmt` standards. Run `cargo fmt` to automatically format code.
+*   **Naming Conventions:**
+    *   `snake_case` for functions, variables, and modules.
+    *   `PascalCase` for types (structs, enums, traits).
+    *   `SCREAMING_SNAKE_CASE` for constants.
+*   **Types:** Explicitly type where clarity is improved, otherwise leverage Rust's type inference.
+*   **Error Handling:** Prefer `Result` and `Option` for error handling. Use `color_eyre` for enhanced error reporting as seen in `main.rs`.
+*   **Comments:** Use `///` for documentation comments and `//` for inline comments. Explain *why* code is written, not just *what* it does.
+
 ## Agent Workflow
 
 When making any changes, always follow these steps:
@@ -41,15 +51,4 @@ When making any changes, always follow these steps:
    - Update any relevant documentation (e.g., `README.md`, `SPEC.md`, `TODO.md`) to reflect your changes.
 
 7. **Commit:**
-   - Write a clear and meaningful git commit message summarizing your changes, .
-
-
-*   **Imports:** Use `use` statements at the top of each module, grouped by `crate`, `super`, `self`, and external crates.
-*   **Formatting:** Adhere to `rustfmt` standards. Run `cargo fmt` to automatically format code.
-*   **Naming Conventions:**
-    *   `snake_case` for functions, variables, and modules.
-    *   `PascalCase` for types (structs, enums, traits).
-    *   `SCREAMING_SNAKE_CASE` for constants.
-*   **Types:** Explicitly type where clarity is improved, otherwise leverage Rust's type inference.
-*   **Error Handling:** Prefer `Result` and `Option` for error handling. Use `color_eyre` for enhanced error reporting as seen in `main.rs`.
-*   **Comments:** Use `///` for documentation comments and `//` for inline comments. Explain *why* code is written, not just *what* it does.
+   - Write a clear and meaningful git commit message summarizing your changes.

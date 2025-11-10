@@ -46,7 +46,7 @@ impl Seaweed {
 
         let animation = Animation::new(frames, frame_duration, true);
 
-        let position = Position::new(x, y, crate::depth::depth::SEAWEED);
+        let position = Position::new(x, y, crate::depth::SEAWEED);
 
         // Seaweed lives for 8-12 minutes (original: rand(4*60) + (8*60))
         let lifetime_secs = rng.gen_range(8 * 60..12 * 60);
@@ -195,7 +195,7 @@ mod tests {
         assert!(seaweed.is_alive());
         assert_eq!(seaweed.entity_type(), "seaweed");
         assert!(seaweed.height() >= 3 && seaweed.height() <= 6);
-        assert_eq!(seaweed.depth(), crate::depth::depth::SEAWEED);
+        assert_eq!(seaweed.depth(), crate::depth::SEAWEED);
     }
 
     #[test]

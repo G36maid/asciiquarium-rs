@@ -11,12 +11,13 @@ pub struct SeaMonster {
     animation_frame: usize,
     last_frame_time: Instant,
     sprites: Vec<Sprite>,
+    #[allow(dead_code)]
     created_at: Instant,
     alive: bool,
 }
 
 impl SeaMonster {
-    pub fn new(id: EntityId, screen_bounds: Rect) -> Self {
+    pub fn new(id: EntityId, screen_bounds: Rect, classic_mode: bool) -> Self {
         let mut rng = rand::thread_rng();
 
         // Random direction
@@ -27,14 +28,21 @@ impl SeaMonster {
         };
 
         // Starting position and velocity
+        // Match original Perl asymmetric spawn behavior
         let (x, dx) = match direction {
             Direction::Right => {
                 // Start off-screen left, move right
-                (-54.0, 2.0)
+                // Original: x = -54 (new monster) or -64 (old monster)
+                if classic_mode {
+                    (-64.0, 2.0)
+                } else {
+                    (-54.0, 2.0)
+                }
             }
             Direction::Left => {
-                // Start off-screen right, move left
-                (screen_bounds.width as f32 + 2.0, -2.0)
+                // Start near right edge, move left
+                // Original: x = width - 2
+                (screen_bounds.width as f32 - 2.0, -2.0)
             }
         };
 
@@ -44,8 +52,12 @@ impl SeaMonster {
         let position = Position::new(x, y, depth);
         let velocity = Velocity::new(dx, 0.0);
 
-        // Create animation sprites
-        let sprites = Self::create_monster_sprites(&direction);
+        // Create animation sprites based on mode
+        let sprites = if classic_mode {
+            Self::create_old_monster_sprites(&direction)
+        } else {
+            Self::create_new_monster_sprites(&direction)
+        };
 
         Self {
             id,
@@ -60,7 +72,7 @@ impl SeaMonster {
         }
     }
 
-    fn create_monster_sprites(direction: &Direction) -> Vec<Sprite> {
+    fn create_new_monster_sprites(direction: &Direction) -> Vec<Sprite> {
         match direction {
             Direction::Right => {
                 vec![
@@ -87,6 +99,60 @@ impl SeaMonster {
                     Sprite::from_ascii_art(
                         "\n   a_a_????????????????????_   _\n _/'' \\}??????_???_??????_{.`=`.}_??????_???_??????_\n(oo_.  |}????{.`'`.}????{.'  _  '.}????{.`'`.}????/ }\n    |  \\}???{/ .-. \\}??{/  .'?'.  \\}??{/ .-. \\}??/ /",
                         Some("\n   W W\n\n\n"),
+                    ),
+                ]
+            }
+        }
+    }
+
+    fn create_old_monster_sprites(direction: &Direction) -> Vec<Sprite> {
+        // Original Perl old/classic monster (4 animation frames)
+        match direction {
+            Direction::Right => {
+                vec![
+                    // Frame 0
+                    Sprite::from_ascii_art(
+                        "\n                                                          ____\n            __??????????????????????????????????????????/   o  \\\n          /    \\????????_?????????????????????_???????/     ____ >\n  _??????|  __  |?????/   \\????????_????????/   \\????|     |\n | \\?????|  ||  |????|     |?????/   \\?????|     |???|     |",
+                        Some("\n\n                                                            W\n\n\n"),
+                    ),
+                    // Frame 1
+                    Sprite::from_ascii_art(
+                        "\n                                                          ____\n                                             __?????????/   o  \\\n             _?????????????????????_???????/    \\?????/     ____ >\n   _???????/   \\????????_????????/   \\????|  __  |???|     |\n  | \\?????|     |?????/   \\?????|     |???|  ||  |???|     |",
+                        Some("\n\n                                                            W\n\n\n"),
+                    ),
+                    // Frame 2
+                    Sprite::from_ascii_art(
+                        "\n                                                          ____\n                                  __????????????????????/   o  \\\n _??????????????????????_???????/    \\????????_???????/     ____ >\n| \\??????????_????????/   \\????|  __  |?????/   \\????|     |\n \\ \\???????/   \\?????|     |???|  ||  |????|     |???|     |",
+                        Some("\n\n                                                            W\n\n\n"),
+                    ),
+                    // Frame 3
+                    Sprite::from_ascii_art(
+                        "\n                                                          ____\n                       __???????????????????????????????/   o  \\\n  _??????????_???????/    \\????????_??????????????????/     ____ >\n | \\???????/   \\????|  __  |?????/   \\????????_??????|     |\n  \\ \\?????|     |???|  ||  |????|     |?????/   \\????|     |",
+                        Some("\n\n                                                            W\n\n\n"),
+                    ),
+                ]
+            }
+            Direction::Left => {
+                vec![
+                    // Frame 0
+                    Sprite::from_ascii_art(
+                        "\n    ____\n  /  o   \\??????????????????????????????????????????__\n< ____     \\???????_?????????????????????_????????/    \\\n      |     |????/   \\????????_????????/   \\?????|  __  |??????_\n      |     |???|     |?????/   \\?????|     |????|  ||  |?????/ |",
+                        Some("\n\n     W\n\n\n"),
+                    ),
+                    // Frame 1
+                    Sprite::from_ascii_art(
+                        "\n    ____\n  /  o   \\?????????__\n< ____     \\?????/    \\???????_?????????????????????_\n      |     |???|  __  |????/   \\????????_????????/   \\???????_\n      |     |???|  ||  |???|     |?????/   \\?????|     |?????/ |",
+                        Some("\n\n     W\n\n\n"),
+                    ),
+                    // Frame 2
+                    Sprite::from_ascii_art(
+                        "\n    ____\n  /  o   \\????????????????????__\n< ____     \\???????_????????/    \\???????_??????????????????????_\n      |     |????/   \\?????|  __  |????/   \\????????_??????????/ |\n      |     |???|     |????|  ||  |???|     |?????/   \\???????/ /",
+                        Some("\n\n     W\n\n\n"),
+                    ),
+                    // Frame 3
+                    Sprite::from_ascii_art(
+                        "\n    ____\n  /  o   \\???????????????????????????????__\n< ____     \\??????????????????_????????/    \\???????_??????????_\n      |     |??????_????????/   \\?????|  __  |????/   \\???????/ |\n      |     |????/   \\?????|     |????|  ||  |???|     |?????/ /",
+                        Some("\n\n     W\n\n\n"),
                     ),
                 ]
             }
@@ -181,7 +247,7 @@ mod tests {
     #[test]
     fn test_sea_monster_creation() {
         let screen_bounds = Rect::new(0, 0, 80, 24);
-        let monster = SeaMonster::new(1, screen_bounds);
+        let monster = SeaMonster::new(1, screen_bounds, false);
 
         assert!(monster.is_alive());
         assert_eq!(monster.entity_type(), "sea_monster");
@@ -192,9 +258,9 @@ mod tests {
     fn test_sea_monster_direction_and_position() {
         let screen_bounds = Rect::new(0, 0, 80, 24);
 
-        // Test multiple monsters to check randomization
+        // Test multiple monsters to check randomization (modern mode)
         for _ in 0..10 {
-            let monster = SeaMonster::new(1, screen_bounds);
+            let monster = SeaMonster::new(1, screen_bounds, false);
 
             match monster.direction {
                 Direction::Right => {
@@ -202,7 +268,7 @@ mod tests {
                     assert_eq!(monster.velocity().dx, 2.0);
                 }
                 Direction::Left => {
-                    assert_eq!(monster.position().x, 82.0); // screen_width + 2
+                    assert_eq!(monster.position().x, 78.0); // screen_width - 2
                     assert_eq!(monster.velocity().dx, -2.0);
                 }
             }
@@ -212,8 +278,8 @@ mod tests {
 
     #[test]
     fn test_sea_monster_sprite_creation() {
-        let right_sprites = SeaMonster::create_monster_sprites(&Direction::Right);
-        let left_sprites = SeaMonster::create_monster_sprites(&Direction::Left);
+        let right_sprites = SeaMonster::create_new_monster_sprites(&Direction::Right);
+        let left_sprites = SeaMonster::create_new_monster_sprites(&Direction::Left);
 
         assert_eq!(right_sprites.len(), 2); // Two animation frames
         assert_eq!(left_sprites.len(), 2); // Two animation frames
@@ -232,8 +298,8 @@ mod tests {
 
     #[test]
     fn test_sea_monster_tentacle_features() {
-        let right_sprites = SeaMonster::create_monster_sprites(&Direction::Right);
-        let left_sprites = SeaMonster::create_monster_sprites(&Direction::Left);
+        let right_sprites = SeaMonster::create_new_monster_sprites(&Direction::Right);
+        let left_sprites = SeaMonster::create_new_monster_sprites(&Direction::Left);
 
         // Check that sprites contain monster features
         let right_text = right_sprites[0].lines.join("\n");
@@ -251,17 +317,22 @@ mod tests {
     #[test]
     fn test_sea_monster_animation_frames() {
         let screen_bounds = Rect::new(0, 0, 80, 24);
-        let monster = SeaMonster::new(1, screen_bounds);
+        let monster_new = SeaMonster::new(1, screen_bounds, false);
 
-        // Should have 2 animation frames
-        assert_eq!(monster.sprites.len(), 2);
-        assert_ne!(monster.sprites[0].lines, monster.sprites[1].lines);
+        // New monster should have 2 animation frames
+        assert_eq!(monster_new.sprites.len(), 2);
+        assert_ne!(monster_new.sprites[0].lines, monster_new.sprites[1].lines);
+
+        let monster_old = SeaMonster::new(2, screen_bounds, true);
+
+        // Old monster should have 4 animation frames
+        assert_eq!(monster_old.sprites.len(), 4);
     }
 
     #[test]
     fn test_sea_monster_animation_update() {
         let screen_bounds = Rect::new(0, 0, 80, 24);
-        let mut monster = SeaMonster::new(1, screen_bounds);
+        let mut monster = SeaMonster::new(1, screen_bounds, false);
 
         let initial_frame = monster.animation_frame;
 
@@ -280,7 +351,7 @@ mod tests {
     #[test]
     fn test_sea_monster_movement() {
         let screen_bounds = Rect::new(0, 0, 80, 24);
-        let mut monster = SeaMonster::new(1, screen_bounds);
+        let mut monster = SeaMonster::new(1, screen_bounds, false);
 
         let initial_x = monster.position().x;
         monster.update(Duration::from_millis(16), screen_bounds); // ~60 FPS
@@ -292,7 +363,7 @@ mod tests {
     #[test]
     fn test_sea_monster_speed() {
         let screen_bounds = Rect::new(0, 0, 80, 24);
-        let monster = SeaMonster::new(1, screen_bounds);
+        let monster = SeaMonster::new(1, screen_bounds, false);
 
         // Sea monsters should move faster than whales (speed 2)
         assert_eq!(monster.velocity().dx.abs(), 2.0);
@@ -301,7 +372,7 @@ mod tests {
     #[test]
     fn test_sea_monster_offscreen_death() {
         let screen_bounds = Rect::new(0, 0, 80, 24);
-        let mut monster = SeaMonster::new(1, screen_bounds);
+        let mut monster = SeaMonster::new(1, screen_bounds, false);
 
         // Move monster far off screen
         match monster.direction {
@@ -316,10 +387,62 @@ mod tests {
     #[test]
     fn test_sea_monster_positioning() {
         let screen_bounds = Rect::new(0, 0, 80, 24);
-        let monster = SeaMonster::new(1, screen_bounds);
+        let monster = SeaMonster::new(1, screen_bounds, false);
 
         // Monsters should be slightly below surface (y=2) and water_gap2 depth
         assert_eq!(monster.position().y, 2.0);
         assert_eq!(monster.depth(), 5);
+    }
+
+    #[test]
+    fn test_sea_monster_classic_mode() {
+        let screen_bounds = Rect::new(0, 0, 80, 24);
+
+        // Modern mode should use new sprites (2 frames)
+        let monster_modern = SeaMonster::new(1, screen_bounds, false);
+        assert_eq!(monster_modern.sprites.len(), 2);
+
+        // Classic mode should use old sprites (4 frames)
+        let monster_classic = SeaMonster::new(2, screen_bounds, true);
+        assert_eq!(monster_classic.sprites.len(), 4);
+
+        // Classic mode should have different spawn position for right-moving
+        for _ in 0..10 {
+            let monster = SeaMonster::new(3, screen_bounds, true);
+            if monster.direction == Direction::Right {
+                assert_eq!(monster.position.x, -64.0); // Old monster spawns at -64
+            }
+        }
+
+        // Modern mode spawns at -54 for right-moving
+        for _ in 0..10 {
+            let monster = SeaMonster::new(4, screen_bounds, false);
+            if monster.direction == Direction::Right {
+                assert_eq!(monster.position.x, -54.0); // New monster spawns at -54
+            }
+        }
+    }
+
+    #[test]
+    fn test_sea_monster_old_sprite_features() {
+        let right_sprites = SeaMonster::create_old_monster_sprites(&Direction::Right);
+        let left_sprites = SeaMonster::create_old_monster_sprites(&Direction::Left);
+
+        // Old monster should have 4 frames
+        assert_eq!(right_sprites.len(), 4);
+        assert_eq!(left_sprites.len(), 4);
+
+        // Check that sprites contain monster features
+        for sprite in &right_sprites {
+            let text = sprite.lines.join("\n");
+            assert!(text.contains("?"));
+            assert!(text.contains("o")); // Eye
+        }
+
+        for sprite in &left_sprites {
+            let text = sprite.lines.join("\n");
+            assert!(text.contains("?"));
+            assert!(text.contains("o")); // Eye
+        }
     }
 }

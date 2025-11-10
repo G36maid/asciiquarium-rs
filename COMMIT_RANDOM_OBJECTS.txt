@@ -1,0 +1,66 @@
+Fix and verify all random objects against original Perl implementation
+
+This commit completes a comprehensive verification of all 5 random objects
+(large creatures) against the original asciiquarium.pl code and fixes all
+discrepancies found.
+
+## Issues Fixed
+
+### Big Fish (High Priority)
+- **Depth**: Corrected from 3 (FISH_START) to 2 (SHARK depth)
+  - Original Perl uses $depth{'shark'} (value 2)
+  - Affects rendering order and visual appearance
+
+- **Spawn Positions**: Fixed X coordinates to match original exactly
+  - Variant1: -34 (right) or width-1 (left), was: 1-sprite_width / width-2
+  - Variant2: -33 (right) or width-1 (left), was: 1-sprite_width / width-2
+
+- **Y Position Ranges**: Now varies by variant height
+  - Variant1 (14 lines): Uses height-15 constraint
+  - Variant2 (13 lines): Uses height-14 constraint
+
+- **Variant Selection**: Adjusted to match original logic exactly
+  - Changed comparison from `> 0` to `> 1`
+  - Matches original `int(rand(3)) > 1`
+
+### Sea Monster (Medium Priority)
+- **Classic Mode Support**: Implemented old/classic monster sprites
+  - Added 4-frame old monster sprites from add_old_monster()
+  - Classic mode: 4 frames, spawns at x=-64
+  - Modern mode: 2 frames, spawns at x=-54
+  - Added classic_mode parameter to SeaMonster::new()
+  - Updated spawner to pass classic_mode flag
+
+## Verification Results
+
+All 5 random objects verified correct:
+- ✅ Ship: Speed 1, depth 7, spawn x=-24/width-2, y=0
+- ✅ Whale: Speed 1, depth 5, spawn x=-18/width-2, y=0, 12-frame animation
+- ✅ Sea Monster: Speed 2, depth 5, spawn x=-54/-64, y=2, mode-based frames
+- ✅ Big Fish: Speed 3/2.5, depth 2, spawn x=-34/-33, variant-based Y
+- ✅ Shark: Speed 2, depth 2, spawn x=-53/width-2, teeth mechanics
+
+## Testing
+
+- Added 2 new tests for Sea Monster classic mode
+- Added 5 new tests for Big Fish (depth, spawn positions, Y ranges)
+- Updated existing tests to verify corrected behavior
+- All 71 tests passing (up from 66)
+- Zero clippy warnings
+
+## Documentation
+
+- Created RANDOM_OBJECTS_VERIFICATION.md: Detailed verification report
+- Created FIXES_NEEDED.md: List of required fixes (reference)
+- Created RANDOM_OBJECTS_FIXES_COMPLETE.md: Complete summary
+- Updated TODO.md: Marked random objects verification complete
+- Updated CHANGELOG.md: Documented all fixes
+
+## Files Modified
+
+- src/entities/big_fish.rs: Fixed depth, spawn positions, Y ranges
+- src/entities/sea_monster.rs: Added classic mode, old monster sprites
+- src/spawning.rs: Updated sea_monster spawner to pass classic_mode
+
+Fixes ensure the Rust port matches the original Perl implementation exactly
+for all large creature spawning, movement, and behavior.

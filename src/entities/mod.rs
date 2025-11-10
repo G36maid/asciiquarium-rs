@@ -3,6 +3,7 @@
 //! This module contains all the different types of entities that can appear
 //! in the aquarium, including fish, bubbles, seaweed, and other creatures.
 
+pub mod big_fish;
 pub mod bubble;
 pub mod castle;
 pub mod fish;
@@ -13,6 +14,7 @@ pub mod ship;
 pub mod water_surface;
 pub mod whale;
 
+pub use big_fish::{BigFish, BigFishVariant};
 pub use bubble::Bubble;
 pub use castle::Castle;
 pub use fish::{Fish, FishSpecies};

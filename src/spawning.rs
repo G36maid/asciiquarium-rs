@@ -12,7 +12,8 @@ use ratatui::layout::Rect;
 /// Add a fish (death callback for fish)
 pub fn add_fish(entity_manager: &mut EntityManager, screen_bounds: Rect) {
     let fish_id = entity_manager.get_next_id();
-    let fish = Fish::new_random(fish_id, screen_bounds);
+    let classic_mode = entity_manager.classic_mode();
+    let fish = Fish::new_random(fish_id, screen_bounds, classic_mode);
     entity_manager.add_entity(Box::new(fish));
 }
 
@@ -77,7 +78,8 @@ pub fn add_sea_monster(entity_manager: &mut EntityManager, screen_bounds: Rect) 
     }
 
     let monster_id = entity_manager.get_next_id();
-    let monster = SeaMonster::new(monster_id, screen_bounds);
+    let classic_mode = entity_manager.classic_mode();
+    let monster = SeaMonster::new(monster_id, screen_bounds, classic_mode);
     entity_manager.set_large_creature(monster_id);
     entity_manager.add_entity(Box::new(monster));
 }
@@ -107,18 +109,17 @@ pub fn add_shark(entity_manager: &mut EntityManager, screen_bounds: Rect) {
     entity_manager.add_entity(Box::new(teeth));
 }
 
-/// Add a big fish (large creature) - placeholder for now
+/// Add a big fish (large creature)
 pub fn add_big_fish(entity_manager: &mut EntityManager, screen_bounds: Rect) {
     if entity_manager.has_large_creature() {
         return; // Only one large creature at a time
     }
 
-    // For now, spawn a large fish using existing fish system
-    // TODO: Implement proper big fish sprites later
     let fish_id = entity_manager.get_next_id();
-    let fish = Fish::new_random(fish_id, screen_bounds);
+    let classic_mode = entity_manager.classic_mode();
+    let big_fish = BigFish::new(fish_id, screen_bounds, classic_mode);
     entity_manager.set_large_creature(fish_id);
-    entity_manager.add_entity(Box::new(fish));
+    entity_manager.add_entity(Box::new(big_fish));
 }
 
 /// Shark death callback - cleans up teeth and spawns new random object

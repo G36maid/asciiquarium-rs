@@ -297,6 +297,12 @@ pub trait Entity {
         None
     }
 
+    /// Check if entity should spawn a bubble and return the bubble position
+    /// Returns Some(position) if a bubble should be spawned, None otherwise
+    fn should_spawn_bubble(&mut self, _delta_time: Duration) -> Option<Position> {
+        None
+    }
+
     /// Check if this entity collides with another at given positions
     fn collides_with(&self, other: &dyn Entity) -> bool {
         let self_pos = self.position().to_screen_coords();
@@ -328,18 +334,26 @@ pub trait Entity {
 
     /// Render the entity to the buffer with transparency
     fn render(&self, buffer: &mut Buffer, screen_bounds: Rect) {
-        let position = self.position().to_screen_coords();
+        let position = self.position();
         let sprite = self.get_current_sprite();
 
         for (row_idx, line) in sprite.lines.iter().enumerate() {
             for (col_idx, ch) in line.chars().enumerate() {
-                let x = position.0.saturating_add(col_idx as u16);
-                let y = position.1.saturating_add(row_idx as u16);
+                // Calculate screen position using i32 to handle negative coordinates
+                let x = position.x as i32 + col_idx as i32;
+                let y = position.y as i32 + row_idx as i32;
 
-                // Check bounds
-                if x >= screen_bounds.width || y >= screen_bounds.height {
+                // Skip if off-screen (negative or beyond bounds)
+                if x < 0
+                    || y < 0
+                    || x >= screen_bounds.width as i32
+                    || y >= screen_bounds.height as i32
+                {
                     continue;
                 }
+
+                let x_u16 = x as u16;
+                let y_u16 = y as u16;
 
                 // Skip transparent characters
                 if sprite.is_transparent_at(col_idx, row_idx) {
@@ -347,8 +361,8 @@ pub trait Entity {
                 }
 
                 // Get the cell and update it
-                if x < buffer.area.width && y < buffer.area.height {
-                    let cell = buffer.cell_mut((x, y)).unwrap();
+                if x_u16 < buffer.area.width && y_u16 < buffer.area.height {
+                    let cell = buffer.cell_mut((x_u16, y_u16)).unwrap();
                     cell.set_char(ch);
 
                     // Apply color from mask if available, or default colors by entity type
@@ -378,6 +392,7 @@ pub struct EntityManager {
     depth_layers: HashMap<u8, Vec<EntityId>>,
     next_id: EntityId,
     large_creature_id: Option<EntityId>, // Track single large creature
+    classic_mode: bool,                  // Classic mode flag (disables new fish/monsters)
 }
 
 impl EntityManager {
@@ -387,7 +402,26 @@ impl EntityManager {
             depth_layers: HashMap::new(),
             next_id: 1,
             large_creature_id: None,
+            classic_mode: false,
         }
+    }
+
+    pub fn new_classic() -> Self {
+        Self {
+            entities: HashMap::new(),
+            depth_layers: HashMap::new(),
+            next_id: 1,
+            large_creature_id: None,
+            classic_mode: true,
+        }
+    }
+
+    pub fn classic_mode(&self) -> bool {
+        self.classic_mode
+    }
+
+    pub fn set_classic_mode(&mut self, classic_mode: bool) {
+        self.classic_mode = classic_mode;
     }
 
     pub fn get_next_id(&self) -> EntityId {
@@ -403,10 +437,7 @@ impl EntityManager {
         // Update entity ID (this requires entities to implement a set_id method)
         // For now, we'll assume the entity constructor sets the ID
 
-        self.depth_layers
-            .entry(depth)
-            .or_insert_with(Vec::new)
-            .push(id);
+        self.depth_layers.entry(depth).or_default().push(id);
 
         self.entities.insert(id, entity);
         id
@@ -426,18 +457,37 @@ impl EntityManager {
 
     pub fn update_all(&mut self, delta_time: Duration, screen_bounds: Rect) {
         let mut dead_entities = Vec::new();
+        let mut bubble_spawns = Vec::new();
 
         for (id, entity) in &mut self.entities {
             entity.update(delta_time, screen_bounds);
             if !entity.is_alive() {
                 dead_entities.push(*id);
             }
+
+            // Check if entity wants to spawn a bubble
+            if let Some(bubble_pos) = entity.should_spawn_bubble(delta_time) {
+                bubble_spawns.push(bubble_pos);
+            }
+        }
+
+        // Spawn bubbles
+        for bubble_pos in bubble_spawns {
+            self.spawn_bubble(bubble_pos);
         }
 
         // Handle death callbacks and remove dead entities
         for id in dead_entities {
             self.handle_entity_death(id, screen_bounds);
         }
+    }
+
+    /// Spawn a bubble at the given position
+    fn spawn_bubble(&mut self, position: Position) {
+        use crate::entities::Bubble;
+        let bubble_id = self.get_next_id();
+        let bubble = Bubble::new(bubble_id, position);
+        self.add_entity(Box::new(bubble));
     }
 
     /// Handle entity death and trigger death callbacks

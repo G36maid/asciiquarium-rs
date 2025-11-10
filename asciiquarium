@@ -62,6 +62,7 @@ getopts('c');
 if ($opt_c) {			# 'classic' mode
 	$new_fish = 0;
 	$new_monster = 0;
+
 }
 
 my @random_objects = init_random_objects();
